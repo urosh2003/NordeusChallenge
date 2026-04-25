@@ -1,9 +1,17 @@
 package com.example.backend.combat;
 
+import lombok.Getter;
+
 import java.util.List;
 
-public interface IMove {
-    String getId();
-    boolean canExecute(MoveContext ctx);
-    List<GameEvent> execute(MoveContext ctx);
+@Getter
+public abstract class IMove {
+    private final String moveId;
+
+    public IMove(String moveId) {
+        this.moveId = moveId;
+    }
+
+    public abstract boolean canExecute(MoveContext ctx);
+    public abstract List<GameEvent> execute(MoveContext ctx);
 }

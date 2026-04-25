@@ -1,0 +1,248 @@
+[
+  {
+    "id": "slash",
+    "name": "Slash",
+    "description": "A swift strike that deals moderate physical damage.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.0 }, "reducedBy": "defense" }
+    ]
+  },
+  {
+    "id": "shieldUp",
+    "name": "Shield Up",
+    "description": "Brace for impact, raising your Defense for two turns.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [
+      { "target": "self", "type": "defense", "value": 3, "duration": 2 }
+    ],
+    "mainEffects": []
+  },
+  {
+    "id": "battleCry",
+    "name": "Battle Cry",
+    "description": "Let out a fierce cry that raises your Attack for two turns.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [
+      { "target": "self", "type": "attack", "value": 3, "duration": 2 }
+    ],
+    "mainEffects": []
+  },
+  {
+    "id": "secondWind",
+    "name": "Second Wind",
+    "description": "Draw on inner reserves to heal for a moderate amount. Scales off Magic.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "heal", "target": "self", "resource": "health", "baseValue": 5, "scaling": { "stat": "magic", "multiplier": 1.0 } }
+    ]
+  },
+  {
+    "id": "shadowBolt",
+    "name": "Shadow Bolt",
+    "description": "Hurl a bolt of dark energy that deals heavy magical damage.",
+    "cost": { "costType": "mana", "costValue": 5 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "magic", "multiplier": 1.5 } }
+    ]
+  },
+  {
+    "id": "drainLife",
+    "name": "Drain Life",
+    "description": "Siphon the life force from your foe, dealing light damage and healing yourself for the same amount.",
+    "cost": { "costType": "mana", "costValue": 4 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "steal", "resource": "health", "baseValue": 3, "scaling": { "stat": "magic", "multiplier": 0.5 } }
+    ]
+  },
+  {
+    "id": "curse",
+    "name": "Curse",
+    "description": "Place a dark curse on your enemy, lowering their Attack for two turns.",
+    "cost": { "costType": "mana", "costValue": 3 },
+    "statusEffects": [
+      { "target": "enemy", "type": "attack", "value": -3, "duration": 2 }
+    ],
+    "mainEffects": []
+  },
+  {
+    "id": "darkPact",
+    "name": "Dark Pact",
+    "description": "Sacrifice your own health to greatly raise your Magic for two turns.",
+    "cost": { "costType": "health", "costValue": 5 },
+    "statusEffects": [
+      { "target": "self", "type": "magic", "value": 4, "duration": 2 }
+    ],
+    "mainEffects": []
+  },
+  {
+    "id": "bite",
+    "name": "Bite",
+    "description": "Sink your fangs into the enemy for moderate physical damage.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.0 }, "reducedBy": "defense" }
+    ]
+  },
+  {
+    "id": "webThrow",
+    "name": "Web Throw",
+    "description": "Hurl sticky webs that deal light damage and reduce the enemy's Defense for two turns.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [
+      { "target": "enemy", "type": "defense", "value": -3, "duration": 2 }
+    ],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 3, "scaling": { "stat": "attack", "multiplier": 0.5 }, "reducedBy": "defense" }
+    ]
+  },
+  {
+    "id": "pounce",
+    "name": "Pounce",
+    "description": "Leap at the enemy with tremendous force for heavy physical damage.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.5 }, "reducedBy": "defense" }
+    ]
+  },
+  {
+    "id": "skitter",
+    "name": "Skitter",
+    "description": "Scuttle erratically to make yourself harder to hit, raising Defense for two turns.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [
+      { "target": "self", "type": "defense", "value": 3, "duration": 2 }
+    ],
+    "mainEffects": []
+  },
+  {
+    "id": "flameBreath",
+    "name": "Flame Breath",
+    "description": "Unleash a torrent of flames for heavy magical damage.",
+    "cost": { "costType": "mana", "costValue": 5 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "magic", "multiplier": 1.5 } }
+    ]
+  },
+  {
+    "id": "clawSwipe",
+    "name": "Claw Swipe",
+    "description": "Rake the enemy with razor-sharp claws for moderate physical damage.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.0 }, "reducedBy": "defense" }
+    ]
+  },
+  {
+    "id": "intimidate",
+    "name": "Intimidate",
+    "description": "Let out a terrifying roar that lowers the enemy's Attack for two turns.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [
+      { "target": "enemy", "type": "attack", "value": -3, "duration": 2 }
+    ],
+    "mainEffects": []
+  },
+  {
+    "id": "dragonScales",
+    "name": "Dragon Scales",
+    "description": "Harden your scales to greatly raise your Defense for two turns.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [
+      { "target": "self", "type": "defense", "value": 4, "duration": 2 }
+    ],
+    "mainEffects": []
+  },
+  {
+    "id": "rustyBlade",
+    "name": "Rusty Blade",
+    "description": "Strike with a battered but effective blade for moderate physical damage.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.0 }, "reducedBy": "defense" }
+    ]
+  },
+  {
+    "id": "dirtyKick",
+    "name": "Dirty Kick",
+    "description": "An underhanded kick that deals light damage and lowers the enemy's Defense for two turns.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [
+      { "target": "enemy", "type": "defense", "value": -2, "duration": 2 }
+    ],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 3, "scaling": { "stat": "attack", "multiplier": 0.5 }, "reducedBy": "defense" }
+    ]
+  },
+  {
+    "id": "frenzy",
+    "name": "Frenzy",
+    "description": "Work yourself into a frenzy, raising your Attack for two turns.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [
+      { "target": "self", "type": "attack", "value": 3, "duration": 2 }
+    ],
+    "mainEffects": []
+  },
+  {
+    "id": "headbutt",
+    "name": "Headbutt",
+    "description": "Slam your head into the enemy with reckless force for heavy physical damage.",
+    "cost": { "costType": "none", "costValue": 0 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.5 }, "reducedBy": "defense" }
+    ]
+  },
+  {
+    "id": "firebolt",
+    "name": "Firebolt",
+    "description": "Launch a bolt of fire for moderate magical damage.",
+    "cost": { "costType": "mana", "costValue": 3 },
+    "statusEffects": [],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "magic", "multiplier": 1.0 } }
+    ]
+  },
+  {
+    "id": "arcaneSurge",
+    "name": "Arcane Surge",
+    "description": "Channel raw arcane energy, raising your Magic for two turns.",
+    "cost": { "costType": "mana", "costValue": 2 },
+    "statusEffects": [
+      { "target": "self", "type": "magic", "value": 4, "duration": 2 }
+    ],
+    "mainEffects": []
+  },
+  {
+    "id": "manaDrain",
+    "name": "Mana Drain",
+    "description": "Siphon magical energy from the foe, dealing light damage and lowering their Magic for two turns.",
+    "cost": { "costType": "mana", "costValue": 3 },
+    "statusEffects": [
+      { "target": "enemy", "type": "magic", "value": -3, "duration": 2 }
+    ],
+    "mainEffects": [
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 3, "scaling": { "stat": "magic", "multiplier": 0.5 } }
+    ]
+  },
+  {
+    "id": "hexShield",
+    "name": "Hex Shield",
+    "description": "Conjure a magical barrier that raises your Defense for two turns.",
+    "cost": { "costType": "mana", "costValue": 2 },
+    "statusEffects": [
+      { "target": "self", "type": "defense", "value": 3, "duration": 2 }
+    ],
+    "mainEffects": []
+  }
+]

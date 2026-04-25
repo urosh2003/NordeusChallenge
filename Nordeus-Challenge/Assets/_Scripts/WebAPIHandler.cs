@@ -63,7 +63,7 @@ public class WebAPIHandler : MonoBehaviour
         string url = "http://localhost:8080/api/games/" + _gameResponse.gameId + "/actions";
 
         UnityWebRequest request = new UnityWebRequest(url, "POST");
-        string json = JsonUtility.ToJson(new ActionRequest("basic_attack"));
+        string json = JsonUtility.ToJson(new MoveRequest("slash"));
         Debug.Log(json);
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
 

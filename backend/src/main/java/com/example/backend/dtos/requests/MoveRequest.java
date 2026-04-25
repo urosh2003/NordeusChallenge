@@ -1,3 +1,3 @@
 package com.example.backend.dtos.requests;
 
-public record ActionRequest(String moveId) {}
+public record MoveRequest(String moveId) {}

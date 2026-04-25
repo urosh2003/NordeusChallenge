@@ -1,6 +1,6 @@
 package com.example.backend.controllers;
 
-import com.example.backend.dtos.requests.ActionRequest;
+import com.example.backend.dtos.requests.MoveRequest;
 import com.example.backend.dtos.responces.GameResponse;
 import com.example.backend.services.GameService;
 import org.springframework.http.HttpStatus;
@@ -27,7 +27,7 @@ public class GameController {
     @PostMapping("/{gameId}/actions")
     public ResponseEntity<GameResponse> playerAction(
             @PathVariable UUID gameId,
-            @RequestBody ActionRequest request) {
+            @RequestBody MoveRequest request) {
         return ResponseEntity.ok(gameService.processPlayerAction(gameId, request.moveId()));
     }
 

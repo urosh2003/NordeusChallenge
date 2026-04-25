@@ -5,7 +5,6 @@ import com.example.backend.combat.GameEventType;
 import com.example.backend.dtos.responces.GameResponse;
 import com.example.backend.combat.GameEvent;
 import com.example.backend.models.Character;
-import com.example.backend.models.CharacterStats;
 import com.example.backend.models.CombatState;
 import com.example.backend.exceptions.GameNotFoundException;
 import com.example.backend.exceptions.InvalidMoveException;
@@ -27,26 +26,18 @@ public class GameService {
     private final GameInstanceRepository repo;
     private final CombatService combatService;
     private final EnemyAIService enemyAI;
+    private final CharacterLoader characterLoader;
 
-    public GameService(GameInstanceRepository repo, CombatService combatService, EnemyAIService enemyAI) {
+    public GameService(GameInstanceRepository repo, CombatService combatService, EnemyAIService enemyAI, CharacterLoader characterLoader) {
         this.repo = repo;
         this.combatService = combatService;
         this.enemyAI = enemyAI;
+        this.characterLoader = characterLoader;
     }
 
     public GameResponse createGame() {
-        Character player = new Character(
-                "player", "Hero",
-                30, 30, 20, 20,
-                new CharacterStats(10, 5),
-                List.of("basic_attack")
-        );
-        Character enemy = new Character(
-                "enemy", "Goblin",
-                20, 20, 0, 0,
-                new CharacterStats(8, 3),
-                List.of("basic_attack")
-        );
+        Character player = characterLoader.createCharacter("player", "knight", 1);
+        Character enemy = characterLoader.createCharacter("enemy", "witch", 1);
 
         CombatState state = new CombatState(player, enemy);
 

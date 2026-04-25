@@ -1,0 +1,44 @@
+[
+  {
+    "id": "knight",
+    "name": "Knight",
+    "baseStats": { "health": 10, "attack": 10, "defense": 8, "magic": 3 },
+    "statsPerLevel": { "health": 2, "attack": 2, "defense": 2, "magic": 1 },
+    "moves": ["slash", "shieldUp", "battleCry", "secondWind"]
+  },
+  {
+    "id": "witch",
+    "name": "Witch",
+    "baseStats": { "health": 7, "attack": 4, "defense": 3, "magic": 10 },
+    "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 3 },
+    "moves": ["shadowBolt", "drainLife", "curse", "darkPact"]
+  },
+  {
+    "id": "giantSpider",
+    "name": "Giant Spider",
+    "baseStats": { "health": 8, "attack": 9, "defense": 5, "magic": 1 },
+    "statsPerLevel": { "health": 1, "attack": 2, "defense": 1, "magic": 0 },
+    "moves": ["bite", "webThrow", "pounce", "skitter"]
+  },
+  {
+    "id": "dragon",
+    "name": "Dragon",
+    "baseStats": { "health": 15, "attack": 14, "defense": 10, "magic": 8 },
+    "statsPerLevel": { "health": 2, "attack": 3, "defense": 2, "magic": 2 },
+    "moves": ["flameBreath", "clawSwipe", "intimidate", "dragonScales"]
+  },
+  {
+    "id": "goblinWarrior",
+    "name": "Goblin Warrior",
+    "baseStats": { "health": 6, "attack": 8, "defense": 4, "magic": 0 },
+    "statsPerLevel": { "health": 1, "attack": 2, "defense": 1, "magic": 0 },
+    "moves": ["rustyBlade", "dirtyKick", "frenzy", "headbutt"]
+  },
+  {
+    "id": "goblinMage",
+    "name": "Goblin Mage",
+    "baseStats": { "health": 6, "attack": 3, "defense": 2, "magic": 7 },
+    "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 2 },
+    "moves": ["firebolt", "arcaneSurge", "manaDrain", "hexShield"]
+  }
+]

@@ -6,6 +6,6 @@ import org.springframework.stereotype.Service;
 public class EnemyAIService {
 
     public String pickMove() {
-        return "basic_attack";
+        return "drainLife";
     }
 }

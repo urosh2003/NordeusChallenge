@@ -1,11 +1,11 @@
 ﻿
 [System.Serializable]
-public class ActionRequest
+public class MoveRequest
 {
         public string moveId;
 
-        public ActionRequest(string actionId)
+        public MoveRequest(string moveId)
         {
-                this.moveId = actionId;
+                this.moveId = moveId;
         }
 }

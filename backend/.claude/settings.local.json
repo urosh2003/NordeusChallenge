@@ -3,7 +3,8 @@
     "allow": [
       "Bash(./gradlew compileJava --no-daemon)",
       "Bash(./gradlew dependencies *)",
-      "Bash(./gradlew test *)"
+      "Bash(./gradlew test *)",
+      "Bash(./gradlew compileJava)"
     ]
   }
 }
