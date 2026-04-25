@@ -46,6 +46,12 @@ public class WebAPIHandler : MonoBehaviour
                 Debug.Log($"Player HP: {response.state.player.currentHp}/{response.state.player.maxHp}");
                 Debug.Log($"Enemy HP: {response.state.enemy.currentHp}/{response.state.enemy.maxHp}");
                 Debug.Log($"Events count: {response.events?.Count ?? 0}");
+
+                if (response.events != null)
+                {
+                    foreach (var evt in response.events)
+                        Debug.Log(GameParser.FormatEvent(evt));
+                }
             }
             catch (System.Exception e)
             {
@@ -90,6 +96,12 @@ public class WebAPIHandler : MonoBehaviour
                 Debug.Log($"Player HP: {response.state.player.currentHp}/{response.state.player.maxHp}");
                 Debug.Log($"Enemy HP: {response.state.enemy.currentHp}/{response.state.enemy.maxHp}");
                 Debug.Log($"Events count: {response.events?.Count ?? 0}");
+
+                if (response.events != null)
+                {
+                    foreach (var evt in response.events)
+                        Debug.Log(GameParser.FormatEvent(evt));
+                }
             }
             catch (System.Exception e) {
                 Debug.LogError("Failed to parse JSON: " + e.Message);
@@ -121,6 +133,12 @@ public class WebAPIHandler : MonoBehaviour
                 Debug.Log($"Player HP: {response.state.player.currentHp}/{response.state.player.maxHp}");
                 Debug.Log($"Enemy HP: {response.state.enemy.currentHp}/{response.state.enemy.maxHp}");
                 Debug.Log($"Events count: {response.events?.Count ?? 0}");
+
+                if (response.events != null)
+                {
+                    foreach (var evt in response.events)
+                        Debug.Log(GameParser.FormatEvent(evt));
+                }
             }
             catch (System.Exception e) {
                 Debug.LogError("Failed to parse JSON: " + e.Message);

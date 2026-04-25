@@ -50,7 +50,7 @@ public class DataDrivenMove extends IMove {
             statusEffect.apply(effectTarget);
             events.add(GameEvent.of(GameEventType.STATUS_EFFECT_APPLIED)
                     .with("targetId", effectTarget.getId())
-                    .with("type", def.getType().name())
+                    .with("statType", def.getType().name())
                     .with("value", def.getValue())
                     .with("duration", def.getDuration()));
         }

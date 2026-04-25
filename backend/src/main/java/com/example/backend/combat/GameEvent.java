@@ -2,6 +2,7 @@ package com.example.backend.combat;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,6 +26,9 @@ public class GameEvent {
         payload.put(key, value);
         return this;
     }
+
+    @JsonProperty("type")
+    public GameEventType getType() { return gameEventType; }
 
     @JsonAnyGetter
     public Map<String, Object> getPayload() { return payload; }
