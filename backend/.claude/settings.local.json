@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew compileJava --no-daemon)",
+      "Bash(./gradlew dependencies *)",
+      "Bash(./gradlew test *)"
+    ]
+  }
+}
