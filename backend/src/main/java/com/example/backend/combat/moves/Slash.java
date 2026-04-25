@@ -11,10 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class BasicAttack implements IMove {
-
-    @Override
-    public String getId() { return "basic_attack"; }
+public class BasicAttack extends IMove {
 
     @Override
     public boolean canExecute(MoveContext ctx) { return true; }
@@ -27,7 +24,7 @@ public class BasicAttack implements IMove {
 
         events.add(GameEvent.of(GameEventType.MOVE_USED)
                 .with("actorId", actor.getId())
-                .with("moveId", getId())
+                .with("moveId", getMoveId())
                 .with("targetId", target.getId()));
 
         int damage = Math.max(1, actor.getStats().getAttack() - target.getStats().getDefense());
@@ -36,7 +33,7 @@ public class BasicAttack implements IMove {
         events.add(GameEvent.of(GameEventType.DAMAGE_DEALT)
                 .with("actorId", target.getId())
                 .with("amount", damage)
-                .with("sourceMoveId", getId()));
+                .with("sourceMoveId", getMoveId()));
 
         return events;
     }
