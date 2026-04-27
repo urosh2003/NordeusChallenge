@@ -29,6 +29,12 @@ public class CharacterLoader {
                 .collect(Collectors.toMap(CharacterDefinition::getId, d -> d));
     }
 
+    public CharacterDefinition getDefinition(String definitionId) {
+        CharacterDefinition def = definitions.get(definitionId);
+        if (def == null) throw new IllegalArgumentException("Unknown character definition: " + definitionId);
+        return def;
+    }
+
     public Character createCharacter(String instanceId, String definitionId, int level) {
         CharacterDefinition def = definitions.get(definitionId);
         if (def == null) throw new IllegalArgumentException("Unknown character definition: " + definitionId);
@@ -36,8 +42,9 @@ public class CharacterLoader {
         return new Character(
                 instanceId,
                 def.getName(),
-                stats.getHealth() * 10,
-                stats.getMagic() * 5,
+                stats.getHealth()  * 10,
+                stats.getMagic()   * 5,
+                stats.getAttack()  * 5,
                 stats,
                 def.getMoves(),
                 new ArrayList<>()

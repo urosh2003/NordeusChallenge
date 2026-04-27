@@ -44,7 +44,7 @@ public class MoveDefinition {
         private double multiplier = 1.0;
     }
 
-    public enum CostType { none, mana, health }
+    public enum CostType { none, mana, health, stamina }
     public enum TargetType { self, enemy }
     public enum StatType { attack, defense, magic }
     public enum MainEffectType { damage, heal, steal }

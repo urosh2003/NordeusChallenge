@@ -32,6 +32,13 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testRuntimeOnly 'com.h2database:h2'
     testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // Drools rule engine
+    implementation 'org.kie:kie-api:9.44.0.Final'
+    implementation 'org.drools:drools-compiler:9.44.0.Final'
+    implementation 'org.drools:drools-core:9.44.0.Final'
+    implementation 'org.drools:drools-mvel:9.44.0.Final'
+    implementation 'org.drools:drools-xml-support:9.44.0.Final'
 }
 
 tasks.named('test') {

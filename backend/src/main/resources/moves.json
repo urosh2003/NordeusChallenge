@@ -3,7 +3,7 @@
     "id": "slash",
     "name": "Slash",
     "description": "A swift strike that deals moderate physical damage.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 4 },
     "statusEffects": [],
     "mainEffects": [
       { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.0 }, "reducedBy": "defense" }
@@ -13,7 +13,7 @@
     "id": "shieldUp",
     "name": "Shield Up",
     "description": "Brace for impact, raising your Defense for two turns.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 2 },
     "statusEffects": [
       { "target": "self", "type": "defense", "value": 3, "duration": 2 }
     ],
@@ -23,7 +23,7 @@
     "id": "battleCry",
     "name": "Battle Cry",
     "description": "Let out a fierce cry that raises your Attack for two turns.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 3 },
     "statusEffects": [
       { "target": "self", "type": "attack", "value": 3, "duration": 2 }
     ],
@@ -83,7 +83,7 @@
     "id": "bite",
     "name": "Bite",
     "description": "Sink your fangs into the enemy for moderate physical damage.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 4 },
     "statusEffects": [],
     "mainEffects": [
       { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.0 }, "reducedBy": "defense" }
@@ -93,7 +93,7 @@
     "id": "webThrow",
     "name": "Web Throw",
     "description": "Hurl sticky webs that deal light damage and reduce the enemy's Defense for two turns.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 3 },
     "statusEffects": [
       { "target": "enemy", "type": "defense", "value": -3, "duration": 2 }
     ],
@@ -105,7 +105,7 @@
     "id": "pounce",
     "name": "Pounce",
     "description": "Leap at the enemy with tremendous force for heavy physical damage.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 6 },
     "statusEffects": [],
     "mainEffects": [
       { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.5 }, "reducedBy": "defense" }
@@ -115,7 +115,7 @@
     "id": "skitter",
     "name": "Skitter",
     "description": "Scuttle erratically to make yourself harder to hit, raising Defense for two turns.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 2 },
     "statusEffects": [
       { "target": "self", "type": "defense", "value": 3, "duration": 2 }
     ],
@@ -135,7 +135,7 @@
     "id": "clawSwipe",
     "name": "Claw Swipe",
     "description": "Rake the enemy with razor-sharp claws for moderate physical damage.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 4 },
     "statusEffects": [],
     "mainEffects": [
       { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.0 }, "reducedBy": "defense" }
@@ -145,7 +145,7 @@
     "id": "intimidate",
     "name": "Intimidate",
     "description": "Let out a terrifying roar that lowers the enemy's Attack for two turns.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 2 },
     "statusEffects": [
       { "target": "enemy", "type": "attack", "value": -3, "duration": 2 }
     ],
@@ -155,7 +155,7 @@
     "id": "dragonScales",
     "name": "Dragon Scales",
     "description": "Harden your scales to greatly raise your Defense for two turns.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 2 },
     "statusEffects": [
       { "target": "self", "type": "defense", "value": 4, "duration": 2 }
     ],
@@ -165,7 +165,7 @@
     "id": "rustyBlade",
     "name": "Rusty Blade",
     "description": "Strike with a battered but effective blade for moderate physical damage.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 4 },
     "statusEffects": [],
     "mainEffects": [
       { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.0 }, "reducedBy": "defense" }
@@ -175,7 +175,7 @@
     "id": "dirtyKick",
     "name": "Dirty Kick",
     "description": "An underhanded kick that deals light damage and lowers the enemy's Defense for two turns.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 3 },
     "statusEffects": [
       { "target": "enemy", "type": "defense", "value": -2, "duration": 2 }
     ],
@@ -187,7 +187,7 @@
     "id": "frenzy",
     "name": "Frenzy",
     "description": "Work yourself into a frenzy, raising your Attack for two turns.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 3 },
     "statusEffects": [
       { "target": "self", "type": "attack", "value": 3, "duration": 2 }
     ],
@@ -197,7 +197,7 @@
     "id": "headbutt",
     "name": "Headbutt",
     "description": "Slam your head into the enemy with reckless force for heavy physical damage.",
-    "cost": { "costType": "none", "costValue": 0 },
+    "cost": { "costType": "stamina", "costValue": 6 },
     "statusEffects": [],
     "mainEffects": [
       { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.5 }, "reducedBy": "defense" }

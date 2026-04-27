@@ -1,0 +1,47 @@
+package com.example.backend.ai.rules
+
+import com.example.backend.ai.facts.CombatEventFact;
+import com.example.backend.ai.facts.PlayerBehaviorProfile;
+import com.example.backend.ai.BehaviorType;
+import com.example.backend.ai.MoveCategory;
+
+declare CombatEventFact
+    @role(event)
+    @timestamp(turnTimestamp)
+end
+
+declare entry-point "combat-stream"
+end
+
+// CEP: player used physical damage moves 3+ times in last 4 MOVE_USED events
+rule "DetectPlayerPhysicalSpammer"
+    salience 90
+when
+    not PlayerBehaviorProfile(type == BehaviorType.PHYSICAL_SPAMMER)
+    Number(intValue >= 3) from accumulate(
+        CombatEventFact(source == "player",
+                        type == "MOVE_USED",
+                        moveCategory == MoveCategory.DAMAGE_PHYSICAL)
+        over window:length(4)
+        from entry-point "combat-stream",
+        count(1)
+    )
+then
+    insert(new PlayerBehaviorProfile(BehaviorType.PHYSICAL_SPAMMER));
+end
+
+// CEP: player used a debuff then attacked on the very next event sequence
+rule "DetectPlayerComboSetup"
+    salience 90
+when
+    not PlayerBehaviorProfile(type == BehaviorType.COMBO_PLAYER)
+    $e1 : CombatEventFact(source == "player",
+                          moveCategory == MoveCategory.ENEMY_DEBUFF)
+          from entry-point "combat-stream"
+    CombatEventFact(source == "player",
+                    (moveCategory == MoveCategory.DAMAGE_PHYSICAL || moveCategory == MoveCategory.DAMAGE_MAGIC),
+                    this after[0, 4] $e1)
+          from entry-point "combat-stream"
+then
+    insert(new PlayerBehaviorProfile(BehaviorType.COMBO_PLAYER));
+end

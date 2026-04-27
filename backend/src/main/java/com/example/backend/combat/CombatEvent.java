@@ -7,28 +7,31 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class GameEvent {
+public class CombatEvent {
 
-    private GameEventType gameEventType;
+    private CombatEventType combatEventType;
     private final Map<String, Object> payload = new LinkedHashMap<>();
 
-    public GameEvent() {}
+    public CombatEvent() {}
 
-    private GameEvent(GameEventType gameEventType) {
-        this.gameEventType = gameEventType;
+    private CombatEvent(CombatEventType combatEventType) {
+        this.combatEventType = combatEventType;
     }
 
-    public static GameEvent of(GameEventType gameEventType) {
-        return new GameEvent(gameEventType);
+    public static CombatEvent of(CombatEventType combatEventType) {
+        return new CombatEvent(combatEventType);
     }
 
-    public GameEvent with(String key, Object value) {
+    public CombatEvent with(String key, Object value) {
         payload.put(key, value);
         return this;
     }
 
     @JsonProperty("type")
-    public GameEventType getType() { return gameEventType; }
+    public CombatEventType getType() { return combatEventType; }
+
+    @JsonProperty("type")
+    public void setType(CombatEventType type) { this.combatEventType = type; }
 
     @JsonAnyGetter
     public Map<String, Object> getPayload() { return payload; }

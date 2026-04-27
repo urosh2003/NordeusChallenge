@@ -11,9 +11,9 @@ public class GlobalExceptionHandler {
 
     record ErrorResponse(String error) {}
 
-    @ExceptionHandler(GameNotFoundException.class)
+    @ExceptionHandler(CombatNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFound(GameNotFoundException e) {
+    public ErrorResponse handleNotFound(CombatNotFoundException e) {
         return new ErrorResponse(e.getMessage());
     }
 
@@ -26,6 +26,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidMoveException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequest(InvalidMoveException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleIllegalState(IllegalStateException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIllegalArgument(IllegalArgumentException e) {
         return new ErrorResponse(e.getMessage());
     }
 

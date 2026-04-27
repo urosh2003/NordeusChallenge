@@ -1,0 +1,52 @@
+package com.example.backend.ai.rules
+
+import com.example.backend.ai.facts.EnemyFact;
+import com.example.backend.ai.facts.PlayerFact;
+import com.example.backend.ai.facts.ResourceStatus;
+import com.example.backend.ai.facts.StatComparison;
+import com.example.backend.ai.ResourceStatusType;
+import com.example.backend.ai.StatComparisonType;
+
+// Universal L1 — Resource assessment
+rule "EvaluateResourceStaminaStarved"
+    salience 100
+when
+    EnemyFact($maxStam : maxStamina, maxStamina > 0,
+              currentStamina < $maxStam * 0.20)
+    not ResourceStatus(resourceName == "stamina")
+then
+    insert(new ResourceStatus(ResourceStatusType.STARVED, "stamina"));
+end
+
+rule "EvaluateResourceManaStarved"
+    salience 100
+when
+    EnemyFact($maxMana : maxMana, maxMana > 0,
+              currentMana < $maxMana * 0.20)
+    not ResourceStatus(resourceName == "mana")
+then
+    insert(new ResourceStatus(ResourceStatusType.STARVED, "mana"));
+end
+
+// Universal L1 — Stat comparison
+rule "DetectStatDisadvantage"
+    salience 100
+when
+    $p : PlayerFact($pa : attack)
+    $e : EnemyFact($ed : defense)
+    eval($pa - $ed > 5)
+    not StatComparison(type == StatComparisonType.PLAYER_PHYSICAL_DOMINATES)
+then
+    insert(new StatComparison(StatComparisonType.PLAYER_PHYSICAL_DOMINATES));
+end
+
+rule "DetectMagicThreat"
+    salience 100
+when
+    $p : PlayerFact($pm : magic)
+    $e : EnemyFact($em : magic)
+    eval($pm > $em * 1.3)
+    not StatComparison(type == StatComparisonType.PLAYER_MAGIC_DOMINATES)
+then
+    insert(new StatComparison(StatComparisonType.PLAYER_MAGIC_DOMINATES));
+end

@@ -1,0 +1,324 @@
+[
+  {
+    "id": "iron_sword",
+    "name": "Iron Sword",
+    "description": "A reliable iron blade. Good starting weapon.",
+    "itemType": "ONE_HANDED",
+    "bonusStats": { "health": 0, "attack": 2, "defense": 0, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "steel_sword",
+    "name": "Steel Sword",
+    "description": "A well-forged sword with a sturdy guard.",
+    "itemType": "ONE_HANDED",
+    "bonusStats": { "health": 0, "attack": 3, "defense": 1, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "enchanted_blade",
+    "name": "Enchanted Blade",
+    "description": "A sword humming with arcane energy, sharp in both body and magic.",
+    "itemType": "ONE_HANDED",
+    "bonusStats": { "health": 0, "attack": 2, "defense": 0, "magic": 2 },
+    "passiveEffects": []
+  },
+  {
+    "id": "bone_club",
+    "name": "Bone Club",
+    "description": "Crudely fashioned from large bones. Heavy and effective.",
+    "itemType": "ONE_HANDED",
+    "bonusStats": { "health": 1, "attack": 1, "defense": 0, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "battle_axe",
+    "name": "Battle Axe",
+    "description": "A single-handed axe that delivers heavy blows.",
+    "itemType": "ONE_HANDED",
+    "bonusStats": { "health": 0, "attack": 3, "defense": 0, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "crystal_wand",
+    "name": "Crystal Wand",
+    "description": "A wand tipped with a resonant crystal, amplifying magical output.",
+    "itemType": "ONE_HANDED",
+    "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 3 },
+    "passiveEffects": [
+      { "type": "BONUS_MANA_REGEN", "value": 1 }
+    ]
+  },
+  {
+    "id": "arcane_blade",
+    "name": "Arcane Blade",
+    "description": "A slender blade etched with runes of power.",
+    "itemType": "ONE_HANDED",
+    "bonusStats": { "health": 0, "attack": 1, "defense": 0, "magic": 3 },
+    "passiveEffects": []
+  },
+  {
+    "id": "rusty_axe",
+    "name": "Rusty Axe",
+    "description": "Old but still sharp enough to do real damage.",
+    "itemType": "ONE_HANDED",
+    "bonusStats": { "health": 0, "attack": 1, "defense": 0, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "greatsword",
+    "name": "Greatsword",
+    "description": "A massive two-handed blade that demands both hands and punishes enemies hard.",
+    "itemType": "TWO_HANDED",
+    "bonusStats": { "health": 0, "attack": 5, "defense": 0, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "war_axe",
+    "name": "War Axe",
+    "description": "A brutal two-handed axe favoured by berserkers.",
+    "itemType": "TWO_HANDED",
+    "bonusStats": { "health": 1, "attack": 4, "defense": 0, "magic": 0 },
+    "passiveEffects": [
+      { "type": "BONUS_STAMINA_REGEN", "value": 1 }
+    ]
+  },
+  {
+    "id": "dragon_slayer",
+    "name": "Dragon Slayer",
+    "description": "A legendary great-blade etched with dragon-bane runes.",
+    "itemType": "TWO_HANDED",
+    "bonusStats": { "health": 0, "attack": 4, "defense": 2, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "staff_of_power",
+    "name": "Staff of Power",
+    "description": "A towering staff crackling with raw magical force.",
+    "itemType": "TWO_HANDED",
+    "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 5 },
+    "passiveEffects": [
+      { "type": "BONUS_MAX_MANA", "value": 10 }
+    ]
+  },
+  {
+    "id": "mystic_staff",
+    "name": "Mystic Staff",
+    "description": "A wooden staff bound with ancient runes. Sturdy and powerful.",
+    "itemType": "TWO_HANDED",
+    "bonusStats": { "health": 1, "attack": 0, "defense": 0, "magic": 4 },
+    "passiveEffects": [
+      { "type": "BONUS_MANA_REGEN", "value": 1 }
+    ]
+  },
+  {
+    "id": "wooden_shield",
+    "name": "Wooden Shield",
+    "description": "A simple but effective shield carved from dense hardwood.",
+    "itemType": "SHIELD",
+    "bonusStats": { "health": 0, "attack": 0, "defense": 2, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "iron_shield",
+    "name": "Iron Shield",
+    "description": "A solid iron shield that deflects most blows.",
+    "itemType": "SHIELD",
+    "bonusStats": { "health": 0, "attack": 0, "defense": 3, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "guardians_shield",
+    "name": "Guardian's Shield",
+    "description": "A heavy tower shield adorned with a guardian's crest.",
+    "itemType": "SHIELD",
+    "bonusStats": { "health": 1, "attack": 0, "defense": 4, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "arcane_buckler",
+    "name": "Arcane Buckler",
+    "description": "A small enchanted buckler that also bolsters magical power.",
+    "itemType": "SHIELD",
+    "bonusStats": { "health": 0, "attack": 0, "defense": 2, "magic": 1 },
+    "passiveEffects": [
+      { "type": "BONUS_MANA_REGEN", "value": 1 }
+    ]
+  },
+  {
+    "id": "leather_armor",
+    "name": "Leather Armor",
+    "description": "Light and flexible armor made from cured hides.",
+    "itemType": "ARMOR",
+    "bonusStats": { "health": 1, "attack": 0, "defense": 2, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "chainmail",
+    "name": "Chainmail",
+    "description": "Interlocked rings of steel that offer solid protection.",
+    "itemType": "ARMOR",
+    "bonusStats": { "health": 2, "attack": 0, "defense": 3, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "plate_armor",
+    "name": "Plate Armor",
+    "description": "Heavy full-plate that turns most attacks aside.",
+    "itemType": "ARMOR",
+    "bonusStats": { "health": 3, "attack": 0, "defense": 5, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "mystic_robes",
+    "name": "Mystic Robes",
+    "description": "Flowing robes imbued with magical wards and arcane symbols.",
+    "itemType": "ARMOR",
+    "bonusStats": { "health": 0, "attack": 0, "defense": 1, "magic": 3 },
+    "passiveEffects": [
+      { "type": "BONUS_MAX_MANA", "value": 5 }
+    ]
+  },
+  {
+    "id": "fighters_gloves",
+    "name": "Fighter's Gloves",
+    "description": "Reinforced gloves that improve striking power and stamina recovery.",
+    "itemType": "GLOVES",
+    "bonusStats": { "health": 0, "attack": 2, "defense": 0, "magic": 0 },
+    "passiveEffects": [
+      { "type": "BONUS_STAMINA_REGEN", "value": 1 }
+    ]
+  },
+  {
+    "id": "arcane_gauntlets",
+    "name": "Arcane Gauntlets",
+    "description": "Gauntlets infused with channeling runes to focus magical energy.",
+    "itemType": "GLOVES",
+    "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 2 },
+    "passiveEffects": [
+      { "type": "BONUS_MANA_REGEN", "value": 1 }
+    ]
+  },
+  {
+    "id": "tempered_bracers",
+    "name": "Tempered Bracers",
+    "description": "Hardened arm guards that provide extra protection and vitality.",
+    "itemType": "GLOVES",
+    "bonusStats": { "health": 1, "attack": 0, "defense": 2, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "swift_grips",
+    "name": "Swift Grips",
+    "description": "Lightweight leather grips that dramatically improve stamina recovery.",
+    "itemType": "GLOVES",
+    "bonusStats": { "health": 0, "attack": 1, "defense": 0, "magic": 0 },
+    "passiveEffects": [
+      { "type": "BONUS_STAMINA_REGEN", "value": 2 }
+    ]
+  },
+  {
+    "id": "leather_boots",
+    "name": "Leather Boots",
+    "description": "Sturdy travelling boots that also offer a little protection.",
+    "itemType": "SHOES",
+    "bonusStats": { "health": 1, "attack": 0, "defense": 1, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "mages_shoes",
+    "name": "Mage's Shoes",
+    "description": "Enchanted slippers that hasten mana recovery between spells.",
+    "itemType": "SHOES",
+    "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 2 },
+    "passiveEffects": [
+      { "type": "BONUS_MANA_REGEN", "value": 1 }
+    ]
+  },
+  {
+    "id": "swift_boots",
+    "name": "Swift Boots",
+    "description": "Springy boots that help the wearer move quickly and recover stamina.",
+    "itemType": "SHOES",
+    "bonusStats": { "health": 0, "attack": 1, "defense": 0, "magic": 0 },
+    "passiveEffects": [
+      { "type": "BONUS_STAMINA_REGEN", "value": 1 }
+    ]
+  },
+  {
+    "id": "amulet_of_strength",
+    "name": "Amulet of Strength",
+    "description": "A heavy pendant carved from dragon bone. Greatly boosts physical power.",
+    "itemType": "AMULET",
+    "bonusStats": { "health": 0, "attack": 2, "defense": 0, "magic": 0 },
+    "passiveEffects": [
+      { "type": "BONUS_MAX_STAMINA", "value": 10 }
+    ]
+  },
+  {
+    "id": "amulet_of_magic",
+    "name": "Amulet of Magic",
+    "description": "A glowing gem on a silver chain. Deepens the wearer's mana pool.",
+    "itemType": "AMULET",
+    "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 2 },
+    "passiveEffects": [
+      { "type": "BONUS_MAX_MANA", "value": 10 }
+    ]
+  },
+  {
+    "id": "amulet_of_protection",
+    "name": "Amulet of Protection",
+    "description": "An ancient ward in amulet form. Bolsters defence and constitution.",
+    "itemType": "AMULET",
+    "bonusStats": { "health": 1, "attack": 0, "defense": 2, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "berserker_pendant",
+    "name": "Berserker's Pendant",
+    "description": "A skull-shaped pendant that fills the wearer with battle rage.",
+    "itemType": "AMULET",
+    "bonusStats": { "health": 0, "attack": 3, "defense": 0, "magic": 0 },
+    "passiveEffects": [
+      { "type": "BONUS_STAMINA_REGEN", "value": 2 }
+    ]
+  },
+  {
+    "id": "ring_of_power",
+    "name": "Ring of Power",
+    "description": "A thick iron band that lends extra strength to every blow.",
+    "itemType": "RING",
+    "bonusStats": { "health": 0, "attack": 1, "defense": 0, "magic": 0 },
+    "passiveEffects": [
+      { "type": "BONUS_MAX_STAMINA", "value": 5 }
+    ]
+  },
+  {
+    "id": "ring_of_wisdom",
+    "name": "Ring of Wisdom",
+    "description": "A delicate silver ring engraved with runes of knowledge.",
+    "itemType": "RING",
+    "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 1 },
+    "passiveEffects": [
+      { "type": "BONUS_MAX_MANA", "value": 5 }
+    ]
+  },
+  {
+    "id": "ring_of_protection",
+    "name": "Ring of Protection",
+    "description": "A plain band infused with defensive magic.",
+    "itemType": "RING",
+    "bonusStats": { "health": 1, "attack": 0, "defense": 1, "magic": 0 },
+    "passiveEffects": []
+  },
+  {
+    "id": "ring_of_vitality",
+    "name": "Ring of Vitality",
+    "description": "A warm amber ring that bolsters the wearer's life force.",
+    "itemType": "RING",
+    "bonusStats": { "health": 2, "attack": 0, "defense": 0, "magic": 0 },
+    "passiveEffects": [
+      { "type": "BONUS_MAX_MANA", "value": 5 }
+    ]
+  }
+]

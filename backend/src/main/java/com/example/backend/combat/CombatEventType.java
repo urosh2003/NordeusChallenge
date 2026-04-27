@@ -1,5 +1,6 @@
 package com.example.backend.combat;
 
-public enum GameEventType {
+public enum CombatEventType {
     MOVE_USED, COMBAT_ENDED, DAMAGE_DEALT, HEAL_RECEIVED, STATUS_EFFECT_APPLIED, TURN_CHANGED,
+    XP_GAINED, MOVE_LEARNT, LEVEL_UP, RESOURCE_REGEN, ITEM_DROPPED, RESOURCE_SPENT,
 }

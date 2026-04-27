@@ -1,8 +1,8 @@
 package com.example.backend.services;
 
-import com.example.backend.combat.MoveContext;
-import com.example.backend.combat.GameEvent;
+import com.example.backend.combat.CombatEvent;
 import com.example.backend.combat.IMove;
+import com.example.backend.combat.MoveContext;
 import com.example.backend.combat.MoveRegistry;
 import com.example.backend.models.Character;
 import com.example.backend.models.CombatState;
@@ -20,7 +20,7 @@ public class CombatService {
         this.moveRegistry = moveRegistry;
     }
 
-    public List<GameEvent> executeMove(CombatState state, Character actor, Character target, String moveId) {
+    public List<CombatEvent> executeMove(CombatState state, Character actor, Character target, String moveId) {
         IMove move = moveRegistry.get(moveId);
         MoveContext ctx = new MoveContext(state, actor, target);
         if (!move.canExecute(ctx)) {

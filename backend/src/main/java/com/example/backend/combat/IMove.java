@@ -13,5 +13,5 @@ public abstract class IMove {
     }
 
     public abstract boolean canExecute(MoveContext ctx);
-    public abstract List<GameEvent> execute(MoveContext ctx);
+    public abstract List<CombatEvent> execute(MoveContext ctx);
 }

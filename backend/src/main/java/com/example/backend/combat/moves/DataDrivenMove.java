@@ -20,24 +20,33 @@ public class DataDrivenMove extends IMove {
     public boolean canExecute(MoveContext ctx) {
         MoveDefinition.Cost cost = definition.getCost();
         return switch (cost.getCostType()) {
-            case mana -> ctx.actor().getCurrentMana() >= cost.getCostValue();
-            case health -> ctx.actor().getCurrentHp() > cost.getCostValue();
-            case none -> true;
+            case mana    -> ctx.actor().getCurrentMana()    >= cost.getCostValue();
+            case health  -> ctx.actor().getCurrentHp()      >  cost.getCostValue();
+            case stamina -> ctx.actor().getCurrentStamina() >= cost.getCostValue();
+            case none    -> true;
         };
     }
 
     @Override
-    public List<GameEvent> execute(MoveContext ctx) {
-        List<GameEvent> events = new ArrayList<>();
+    public List<CombatEvent> execute(MoveContext ctx) {
+        List<CombatEvent> events = new ArrayList<>();
         Character actor = ctx.actor();
         Character target = ctx.target();
 
-        events.add(GameEvent.of(GameEventType.MOVE_USED)
+        events.add(CombatEvent.of(CombatEventType.MOVE_USED)
                 .with("actorId", actor.getId())
                 .with("moveId", definition.getId())
                 .with("targetId", target.getId()));
 
-        applyCost(definition.getCost(), actor);
+        MoveDefinition.Cost cost = definition.getCost();
+        applyCost(cost, actor);
+
+        if (cost.getCostType() != MoveDefinition.CostType.none) {
+            events.add(CombatEvent.of(CombatEventType.RESOURCE_SPENT)
+                    .with("actorId", actor.getId())
+                    .with("costType", cost.getCostType().name())
+                    .with("amount",   cost.getCostValue()));
+        }
 
         for (MoveDefinition.MainEffectDef effect : definition.getMainEffects()) {
             events.addAll(applyMainEffect(effect, actor, target));
@@ -48,7 +57,7 @@ public class DataDrivenMove extends IMove {
             IStatusEffect statusEffect = buildStatusEffect(def);
             effectTarget.getActiveEffects().add(statusEffect);
             statusEffect.apply(effectTarget);
-            events.add(GameEvent.of(GameEventType.STATUS_EFFECT_APPLIED)
+            events.add(CombatEvent.of(CombatEventType.STATUS_EFFECT_APPLIED)
                     .with("targetId", effectTarget.getId())
                     .with("statType", def.getType().name())
                     .with("value", def.getValue())
@@ -60,21 +69,22 @@ public class DataDrivenMove extends IMove {
 
     private void applyCost(MoveDefinition.Cost cost, Character actor) {
         switch (cost.getCostType()) {
-            case mana -> actor.setCurrentMana(actor.getCurrentMana() - cost.getCostValue());
-            case health -> actor.setCurrentHp(actor.getCurrentHp() - cost.getCostValue());
-            case none -> { }
+            case mana    -> actor.setCurrentMana(actor.getCurrentMana() - cost.getCostValue());
+            case health  -> actor.setCurrentHp(actor.getCurrentHp() - cost.getCostValue());
+            case stamina -> actor.setCurrentStamina(actor.getCurrentStamina() - cost.getCostValue());
+            case none    -> { }
         }
     }
 
-    private List<GameEvent> applyMainEffect(MoveDefinition.MainEffectDef effect, Character actor, Character target) {
-        List<GameEvent> events = new ArrayList<>();
+    private List<CombatEvent> applyMainEffect(MoveDefinition.MainEffectDef effect, Character actor, Character target) {
+        List<CombatEvent> events = new ArrayList<>();
         int value = computeValue(effect, actor, target);
 
         switch (effect.getType()) {
             case damage -> {
                 Character dmgTarget = effect.getTarget() == MoveDefinition.TargetType.self ? actor : target;
                 dmgTarget.setCurrentHp(Math.max(0, dmgTarget.getCurrentHp() - value));
-                events.add(GameEvent.of(GameEventType.DAMAGE_DEALT)
+                events.add(CombatEvent.of(CombatEventType.DAMAGE_DEALT)
                         .with("targetId", dmgTarget.getId())
                         .with("amount", value)
                         .with("sourceMoveId", definition.getId()));
@@ -83,7 +93,7 @@ public class DataDrivenMove extends IMove {
                 Character healTarget = effect.getTarget() == MoveDefinition.TargetType.self ? actor : target;
                 int healed = Math.min(value, healTarget.getMaxHp() - healTarget.getCurrentHp());
                 healTarget.setCurrentHp(healTarget.getCurrentHp() + healed);
-                events.add(GameEvent.of(GameEventType.HEAL_RECEIVED)
+                events.add(CombatEvent.of(CombatEventType.HEAL_RECEIVED)
                         .with("targetId", healTarget.getId())
                         .with("amount", healed)
                         .with("sourceMoveId", definition.getId()));
@@ -93,11 +103,11 @@ public class DataDrivenMove extends IMove {
                 target.setCurrentHp(Math.max(0, target.getCurrentHp() - stolen));
                 int healed = Math.min(stolen, actor.getMaxHp() - actor.getCurrentHp());
                 actor.setCurrentHp(actor.getCurrentHp() + healed);
-                events.add(GameEvent.of(GameEventType.DAMAGE_DEALT)
+                events.add(CombatEvent.of(CombatEventType.DAMAGE_DEALT)
                         .with("targetId", target.getId())
                         .with("amount", stolen)
                         .with("sourceMoveId", definition.getId()));
-                events.add(GameEvent.of(GameEventType.HEAL_RECEIVED)
+                events.add(CombatEvent.of(CombatEventType.HEAL_RECEIVED)
                         .with("targetId", actor.getId())
                         .with("amount", healed)
                         .with("sourceMoveId", definition.getId()));

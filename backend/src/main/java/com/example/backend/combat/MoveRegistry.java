@@ -16,14 +16,17 @@ import java.util.stream.Collectors;
 public class MoveRegistry {
 
     private final Map<String, IMove> moves;
+    private final Map<String, MoveDefinition> definitions;
 
     public MoveRegistry(ObjectMapper objectMapper, ResourceLoader resourceLoader) throws IOException {
         Resource resource = resourceLoader.getResource("classpath:moves.json");
-        List<MoveDefinition> definitions = objectMapper.readValue(
+        List<MoveDefinition> defs = objectMapper.readValue(
                 resource.getInputStream(),
                 objectMapper.getTypeFactory().constructCollectionType(List.class, MoveDefinition.class)
         );
-        this.moves = definitions.stream()
+        this.definitions = defs.stream()
+                .collect(Collectors.toMap(MoveDefinition::getId, d -> d));
+        this.moves = defs.stream()
                 .collect(Collectors.toMap(MoveDefinition::getId, DataDrivenMove::new));
     }
 
@@ -31,5 +34,11 @@ public class MoveRegistry {
         IMove move = moves.get(moveId);
         if (move == null) throw new InvalidMoveException("Unknown move: " + moveId);
         return move;
+    }
+
+    public MoveDefinition getDefinition(String moveId) {
+        MoveDefinition def = definitions.get(moveId);
+        if (def == null) throw new InvalidMoveException("Unknown move: " + moveId);
+        return def;
     }
 }

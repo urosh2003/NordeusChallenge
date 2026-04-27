@@ -1,0 +1,147 @@
+package com.example.backend.ai.rules
+
+import com.example.backend.ai.facts.*;
+import com.example.backend.ai.TacticType;
+import com.example.backend.ai.MoveCategory;
+import com.example.backend.ai.ThreatLevel;
+import com.example.backend.ai.StatComparisonType;
+import com.example.backend.ai.ResourceStatusType;
+
+// L3 — MAXIMIZE_DAMAGE: prefer vulnerable damage type if player has a debuff active
+rule "EmitMaximizeDamagePhysicalVulnerable"
+    salience 20
+when
+    Tactic(type == TacticType.MAXIMIZE_DAMAGE)
+    not EnemyDecision(priority >= 10)
+    ?isVulnerableTo("player", "physical"; )
+    $best : MoveOption(moveCategory == MoveCategory.DAMAGE_PHYSICAL, $val : projectedValue)
+    not MoveOption(moveCategory == MoveCategory.DAMAGE_PHYSICAL, projectedValue > $val)
+then
+    insert(new EnemyDecision($best.getMoveId(), 10,
+            "Player vulnerable to physical; maximize: " + $best.getMoveId()));
+end
+
+rule "EmitMaximizeDamageMagicVulnerable"
+    salience 20
+when
+    Tactic(type == TacticType.MAXIMIZE_DAMAGE)
+    not EnemyDecision(priority >= 10)
+    ?isVulnerableTo("player", "magical"; )
+    $best : MoveOption(moveCategory == MoveCategory.DAMAGE_MAGIC, $val : projectedValue)
+    not MoveOption(moveCategory == MoveCategory.DAMAGE_MAGIC, projectedValue > $val)
+then
+    insert(new EnemyDecision($best.getMoveId(), 10,
+            "Player vulnerable to magic; maximize: " + $best.getMoveId()));
+end
+
+// L3 — MAXIMIZE_DAMAGE: no specific vulnerability; pick highest-value damage move
+rule "EmitMaximizeDamageAny"
+    salience 10
+when
+    Tactic(type == TacticType.MAXIMIZE_DAMAGE)
+    not EnemyDecision(priority >= 9)
+    $best : MoveOption(
+        (moveCategory == MoveCategory.DAMAGE_PHYSICAL || moveCategory == MoveCategory.DAMAGE_MAGIC),
+        $val : projectedValue
+    )
+    not MoveOption(
+        (moveCategory == MoveCategory.DAMAGE_PHYSICAL || moveCategory == MoveCategory.DAMAGE_MAGIC),
+        projectedValue > $val
+    )
+then
+    insert(new EnemyDecision($best.getMoveId(), 9,
+            "Maximize damage output: " + $best.getMoveId()));
+end
+
+// L3 — SELF_BUFF tactic
+rule "EmitSelfBuffMove"
+    salience 10
+when
+    Tactic(type == TacticType.SELF_BUFF)
+    not EnemyDecision(priority >= 7)
+    $opt : MoveOption(moveCategory == MoveCategory.SELF_BUFF)
+then
+    insert(new EnemyDecision($opt.getMoveId(), 7,
+            "Self-buff tactic: " + $opt.getMoveId()));
+end
+
+// L3 — DEBUFF_PLAYER tactic
+rule "EmitDebuffMove"
+    salience 10
+when
+    Tactic(type == TacticType.DEBUFF_PLAYER)
+    not EnemyDecision(priority >= 7)
+    $opt : MoveOption(moveCategory == MoveCategory.ENEMY_DEBUFF)
+then
+    insert(new EnemyDecision($opt.getMoveId(), 7,
+            "Debuff player tactic: " + $opt.getMoveId()));
+end
+
+// L3 — DRAIN tactic
+rule "EmitDrainMove"
+    salience 10
+when
+    Tactic(type == TacticType.DRAIN)
+    not EnemyDecision(priority >= 7)
+    $opt : MoveOption(moveCategory == MoveCategory.DRAIN)
+then
+    insert(new EnemyDecision($opt.getMoveId(), 7,
+            "Drain tactic: " + $opt.getMoveId()));
+end
+
+// L3 — CONSERVATIVE tactic: pick the lowest-cost move
+rule "EmitConservativeMove"
+    salience 10
+when
+    Tactic(type == TacticType.CONSERVATIVE)
+    not EnemyDecision(priority >= 6)
+    $opt : MoveOption($minCost : costValue)
+    not MoveOption(costValue < $minCost)
+then
+    insert(new EnemyDecision($opt.getMoveId(), 6,
+            "Conservative (low-resource) tactic: " + $opt.getMoveId()));
+end
+
+// Universal L2 — stat disadvantage → debuff player
+rule "ChooseDebuffPlayerTactic"
+    salience 50
+when
+    StatComparison(type == StatComparisonType.PLAYER_PHYSICAL_DOMINATES ||
+                   type == StatComparisonType.PLAYER_MAGIC_DOMINATES)
+    MoveOption(moveCategory == MoveCategory.ENEMY_DEBUFF)
+    not Tactic()
+then
+    insert(new Tactic(TacticType.DEBUFF_PLAYER));
+end
+
+// Universal L2 — resources low → conservative
+rule "ChooseConservativeTactic"
+    salience 45
+when
+    ResourceStatus(type == ResourceStatusType.STARVED)
+    not Tactic()
+then
+    insert(new Tactic(TacticType.CONSERVATIVE));
+end
+
+// Universal L2 — high HP and DRAIN available → drain
+rule "ChooseDrainTactic"
+    salience 40
+when
+    PerceivedThreat(level == ThreatLevel.CRITICAL || level == ThreatLevel.HIGH)
+    MoveOption(moveCategory == MoveCategory.DRAIN)
+    not Tactic()
+then
+    insert(new Tactic(TacticType.DRAIN));
+end
+
+// Universal L2 — safe HP with SELF_BUFF available
+rule "ChooseSelfBuffTactic"
+    salience 35
+when
+    not PerceivedThreat(level == ThreatLevel.CRITICAL)
+    MoveOption(moveCategory == MoveCategory.SELF_BUFF)
+    not Tactic()
+then
+    insert(new Tactic(TacticType.SELF_BUFF));
+end

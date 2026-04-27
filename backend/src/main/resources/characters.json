@@ -4,41 +4,47 @@
     "name": "Knight",
     "baseStats": { "health": 10, "attack": 10, "defense": 8, "magic": 3 },
     "statsPerLevel": { "health": 2, "attack": 2, "defense": 2, "magic": 1 },
-    "moves": ["slash", "shieldUp", "battleCry", "secondWind"]
+    "moves": ["slash", "shieldUp", "battleCry", "secondWind"],
+    "possibleDrops": []
   },
   {
     "id": "witch",
     "name": "Witch",
     "baseStats": { "health": 7, "attack": 4, "defense": 3, "magic": 10 },
     "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 3 },
-    "moves": ["shadowBolt", "drainLife", "curse", "darkPact"]
+    "moves": ["shadowBolt", "drainLife", "curse", "darkPact"],
+    "possibleDrops": ["enchanted_blade", "mystic_robes", "arcane_buckler", "amulet_of_magic"]
   },
   {
     "id": "giantSpider",
     "name": "Giant Spider",
     "baseStats": { "health": 8, "attack": 9, "defense": 5, "magic": 1 },
     "statsPerLevel": { "health": 1, "attack": 2, "defense": 1, "magic": 0 },
-    "moves": ["bite", "webThrow", "pounce", "skitter"]
+    "moves": ["bite", "webThrow", "pounce", "skitter"],
+    "possibleDrops": ["swift_boots", "leather_boots", "tempered_bracers", "ring_of_protection"]
   },
   {
     "id": "dragon",
     "name": "Dragon",
     "baseStats": { "health": 15, "attack": 14, "defense": 10, "magic": 8 },
     "statsPerLevel": { "health": 2, "attack": 3, "defense": 2, "magic": 2 },
-    "moves": ["flameBreath", "clawSwipe", "intimidate", "dragonScales"]
+    "moves": ["flameBreath", "clawSwipe", "intimidate", "dragonScales"],
+    "possibleDrops": ["dragon_slayer", "plate_armor", "guardians_shield", "amulet_of_strength", "berserker_pendant"]
   },
   {
     "id": "goblinWarrior",
     "name": "Goblin Warrior",
     "baseStats": { "health": 6, "attack": 8, "defense": 4, "magic": 0 },
     "statsPerLevel": { "health": 1, "attack": 2, "defense": 1, "magic": 0 },
-    "moves": ["rustyBlade", "dirtyKick", "frenzy", "headbutt"]
+    "moves": ["rustyBlade", "dirtyKick", "frenzy", "headbutt"],
+    "possibleDrops": ["bone_club", "leather_armor", "fighters_gloves", "ring_of_power"]
   },
   {
     "id": "goblinMage",
     "name": "Goblin Mage",
     "baseStats": { "health": 6, "attack": 3, "defense": 2, "magic": 7 },
     "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 2 },
-    "moves": ["firebolt", "arcaneSurge", "manaDrain", "hexShield"]
+    "moves": ["firebolt", "arcaneSurge", "manaDrain", "hexShield"],
+    "possibleDrops": ["arcane_gauntlets", "mages_shoes", "ring_of_wisdom", "wooden_shield"]
   }
 ]

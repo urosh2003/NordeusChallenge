@@ -9,18 +9,18 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Entity
-@Table(name = "games")
+@Table(name = "combats")
 @Getter
 @Setter
 @NoArgsConstructor
-public class GameInstance {
+public class CombatInstance {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Enumerated(EnumType.STRING)
-    private GameStatus status;
+    private CombatStatus status;
 
     @Enumerated(EnumType.STRING)
     private Turn currentTurn;
@@ -31,4 +31,11 @@ public class GameInstance {
     @Convert(converter = CombatStateConverter.class)
     @Column(columnDefinition = "text")
     private CombatState state;
+
+    private int enemyLevel = 1;
+    private String enemyDefinitionId;
+
+    // Set when this combat belongs to a run
+    private UUID runId;
+    private int encounterIndex;
 }

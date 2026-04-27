@@ -11,4 +11,5 @@ public class CharacterDefinition {
     private CharacterStats baseStats;
     private CharacterStats statsPerLevel;
     private List<String> moves;
+    private List<String> possibleDrops;
 }

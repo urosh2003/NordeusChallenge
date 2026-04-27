@@ -1,5 +1,5 @@
 package com.example.backend.models;
 
-public enum GameStatus {
+public enum RunStatus {
     ACTIVE, COMPLETED
 }
