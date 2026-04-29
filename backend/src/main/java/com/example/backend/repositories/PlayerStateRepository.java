@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface PlayerStateRepository extends JpaRepository<PlayerState, UUID> {
     Optional<PlayerState> findFirstByOrderByIdAsc();
+    Optional<PlayerState> findByRunId(UUID runId);
 }

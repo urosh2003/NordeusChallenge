@@ -14,7 +14,7 @@ import java.util.*;
 @Transactional
 public class PlayerService {
 
-    private static final String DEFAULT_CHARACTER = "knight";
+    private static final String DEFAULT_CHARACTER = "knight"; // fallback for null-runId standalone combats
     private static final int POINTS_PER_LEVEL = 3;
 
     private final PlayerStateRepository repository;
@@ -28,25 +28,51 @@ public class PlayerService {
         this.itemRegistry = itemRegistry;
     }
 
-    public PlayerState getOrCreatePlayerState() {
-        return repository.findFirstByOrderByIdAsc()
-                .orElseGet(this::initializeNewPlayer);
+    /**
+     * Returns the PlayerState for this run, creating a fresh one if it doesn't exist yet.
+     * Pass null only for standalone (test) combats without a run.
+     */
+    public PlayerState getOrCreatePlayerState(UUID runId) {
+        if (runId == null) {
+            return repository.findFirstByOrderByIdAsc()
+                    .orElseGet(() -> initializeNewPlayer(null, DEFAULT_CHARACTER));
+        }
+        return repository.findByRunId(runId)
+                .orElseGet(() -> initializeNewPlayer(runId, DEFAULT_CHARACTER));
     }
 
-    /** Called after the player wins a combat. Returns reward events to include in the response. */
+    public void saveState(PlayerState ps) {
+        repository.save(ps);
+    }
+
+    /** Create a fresh PlayerState for a new run using the chosen class. */
+    public PlayerState createPlayerStateForRun(UUID runId, String classId) {
+        CharacterDefinition def = characterLoader.getDefinition(classId);
+        if (!def.isStartingClass())
+            throw new IllegalArgumentException("'" + classId + "' is not a playable starting class");
+        return initializeNewPlayer(runId, classId);
+    }
+
+    /** Called after the player wins a combat. Saves remaining resources, awards gold. */
     public List<CombatEvent> processVictory(PlayerState playerState, int enemyLevel,
-                                            List<String> enemyMoves, String enemyDefinitionId) {
+                                            List<String> enemyMoves, String enemyDefinitionId,
+                                            Character player) {
         List<CombatEvent> rewardEvents = new ArrayList<>();
 
         learnMove(playerState, enemyMoves, rewardEvents);
         awardXp(playerState, enemyLevel, rewardEvents);
         dropItem(playerState, enemyDefinitionId, rewardEvents);
+        awardGold(playerState, enemyLevel, rewardEvents);
+
+        playerState.setCurrentHp(player.getCurrentHp());
+        playerState.setCurrentMana(player.getCurrentMana());
+        playerState.setCurrentStamina(player.getCurrentStamina());
 
         repository.save(playerState);
         return rewardEvents;
     }
 
-    /** Build the player's Character for combat, applying equipped item bonuses. */
+    /** Build the player's Character for combat, applying equipped item bonuses and persisted resources. */
     public Character buildCombatCharacter(PlayerState playerState) {
         CharacterStats base = playerState.getStats();
         Equipment eq = playerState.getEquipment();
@@ -82,12 +108,24 @@ public class PlayerService {
                 base.getMagic()   + bonusMagic
         );
 
+        int maxHp      = effective.getHealth() * 10;
+        int maxMana    = effective.getMagic()  * 5  + bonusMaxMana;
+        int maxStamina = effective.getAttack() * 5  + bonusMaxStamina;
+
+        // 0 means "not yet set" — use max (fresh player or new run)
+        int startHp      = playerState.getCurrentHp()      > 0
+                ? Math.min(playerState.getCurrentHp(),      maxHp)      : maxHp;
+        int startMana    = playerState.getCurrentMana()    > 0
+                ? Math.min(playerState.getCurrentMana(),    maxMana)    : maxMana;
+        int startStamina = playerState.getCurrentStamina() > 0
+                ? Math.min(playerState.getCurrentStamina(), maxStamina) : maxStamina;
+
         Character character = new Character(
                 "player",
                 playerState.getCharacterName(),
-                effective.getHealth() * 10,
-                effective.getMagic()  * 5  + bonusMaxMana,
-                effective.getAttack() * 5  + bonusMaxStamina,
+                startHp,
+                startMana,
+                startStamina,
                 effective,
                 new ArrayList<>(playerState.getEquippedMoves()),
                 new ArrayList<>()
@@ -99,108 +137,90 @@ public class PlayerService {
         return character;
     }
 
-    /** Update which 4 moves are equipped for the next combat. */
-    public PlayerState equipMoves(List<String> moveIds) {
-        if (moveIds == null || moveIds.size() != 4) {
+    public PlayerState equipMoves(UUID runId, List<String> moveIds) {
+        if (moveIds == null || moveIds.size() != 4)
             throw new IllegalArgumentException("Exactly 4 moves must be equipped");
-        }
-        if (new HashSet<>(moveIds).size() != 4) {
+        if (new HashSet<>(moveIds).size() != 4)
             throw new IllegalArgumentException("Equipped moves must be unique");
-        }
 
-        PlayerState playerState = getOrCreatePlayerState();
+        PlayerState ps = getOrCreatePlayerState(runId);
         for (String moveId : moveIds) {
-            if (!playerState.getKnownMoves().contains(moveId)) {
+            if (!ps.getKnownMoves().contains(moveId))
                 throw new IllegalArgumentException("Player does not know move: " + moveId);
-            }
         }
-
-        playerState.setEquippedMoves(new ArrayList<>(moveIds));
-        return repository.save(playerState);
-    }
-
-    /** Move an item from inventory into the appropriate equipment slot. */
-    public PlayerState equipItem(String itemId) {
-        PlayerState ps = getOrCreatePlayerState();
-        ItemDefinition item = itemRegistry.getItem(itemId);
-
-        if (!ps.getInventory().contains(itemId)) {
-            throw new IllegalArgumentException("Item not in inventory: " + itemId);
-        }
-
-        Equipment eq = ps.getEquipment();
-
-        if (item.getItemType() == ItemType.TWO_HANDED) {
-            // TWO_HANDED takes mainHand; off-hand must be cleared
-            String displaced = eq.getOffHand();
-            if (displaced != null) {
-                ps.getInventory().add(displaced);
-                eq.setOffHand(null);
-            }
-            returnToInventory(ps, eq, EquipmentSlot.MAIN_HAND);
-            eq.setMainHand(itemId);
-
-        } else if (item.getItemType() == ItemType.SHIELD) {
-            // SHIELD always goes off-hand; if a TWO_HANDED is in main-hand, move it to inventory
-            displaceTwoHandedIfPresent(ps, eq);
-            returnToInventory(ps, eq, EquipmentSlot.OFF_HAND);
-            eq.setOffHand(itemId);
-
-        } else {
-            // ONE_HANDED goes to main-hand by default; all other slots are unique
-            EquipmentSlot slot = slotFor(item.getItemType());
-            if (slot == EquipmentSlot.MAIN_HAND) {
-                // If a TWO_HANDED is already there the off-hand is already clear, just replace
-                returnToInventory(ps, eq, EquipmentSlot.MAIN_HAND);
-                eq.setMainHand(itemId);
-            } else {
-                returnToInventory(ps, eq, slot);
-                setSlot(eq, slot, itemId);
-            }
-        }
-
-        ps.getInventory().remove(itemId);
+        ps.setEquippedMoves(new ArrayList<>(moveIds));
         return repository.save(ps);
     }
 
-    /** Move an equipped item back into inventory. */
-    public PlayerState unequipItem(String itemId) {
-        PlayerState ps = getOrCreatePlayerState();
-        Equipment eq = ps.getEquipment();
+    /**
+     * Apply a complete equipment loadout in one shot (mirrors equipMoves).
+     * Any item currently equipped but absent from the new loadout returns to inventory.
+     * Any item in the new loadout is removed from inventory.
+     * Validates: all items must be in the pool of (current equipment + inventory),
+     * each item fits its slot's type, no duplicates, two-handed + shield conflict.
+     */
+    public PlayerState setEquipment(UUID runId, Equipment incoming) {
+        PlayerState ps = getOrCreatePlayerState(runId);
+        Equipment current = ps.getEquipment();
 
-        EquipmentSlot slot = findSlot(eq, itemId);
-        if (slot == null) {
-            throw new IllegalArgumentException("Item is not equipped: " + itemId);
+        // Pool = everything the player owns (equipped + inventory)
+        List<String> pool = new ArrayList<>(ps.getInventory());
+        pool.addAll(current.getAllEquipped());
+
+        List<String> slots = incoming.getAllEquipped();
+
+        // No duplicates
+        if (slots.stream().distinct().count() != slots.size())
+            throw new IllegalArgumentException("Duplicate items in equipment");
+
+        // Every item must come from the pool
+        for (String id : slots) {
+            if (!pool.contains(id))
+                throw new IllegalArgumentException("Item not owned: " + id);
         }
 
-        setSlot(eq, slot, null);
-        ps.getInventory().add(itemId);
+        // Type-slot validation
+        validateSlot(incoming.getMainHand(), EquipmentSlot.MAIN_HAND);
+        validateSlot(incoming.getOffHand(),  EquipmentSlot.OFF_HAND);
+        validateSlot(incoming.getArmor(),    EquipmentSlot.ARMOR);
+        validateSlot(incoming.getGloves(),   EquipmentSlot.GLOVES);
+        validateSlot(incoming.getShoes(),    EquipmentSlot.SHOES);
+        validateSlot(incoming.getAmulet(),   EquipmentSlot.AMULET);
+        validateSlot(incoming.getRing(),     EquipmentSlot.RING);
+
+        // Two-handed + offHand conflict
+        if (incoming.getMainHand() != null && !incoming.getMainHand().isEmpty()
+                && itemRegistry.getItem(incoming.getMainHand()).getItemType() == ItemType.TWO_HANDED
+                && incoming.getOffHand() != null && !incoming.getOffHand().isEmpty())
+            throw new IllegalArgumentException("Cannot equip an off-hand item with a two-handed weapon");
+
+        // Rebuild inventory = pool minus everything in the new loadout
+        List<String> newInventory = new ArrayList<>(pool);
+        newInventory.removeAll(slots);
+
+        ps.setInventory(newInventory);
+        ps.setEquipment(incoming);
         return repository.save(ps);
     }
 
-    /** Spend 3 pending stat points from one level-up. */
-    public PlayerState distributeStatPoints(int health, int attack, int defense, int magic) {
+    public PlayerState distributeStatPoints(UUID runId, int health, int attack, int defense, int magic) {
         int total = health + attack + defense + magic;
-        if (total != POINTS_PER_LEVEL) {
+        if (total != POINTS_PER_LEVEL)
             throw new IllegalArgumentException(
                     "Must distribute exactly " + POINTS_PER_LEVEL + " points, got " + total);
-        }
-        if (health < 0 || attack < 0 || defense < 0 || magic < 0) {
+        if (health < 0 || attack < 0 || defense < 0 || magic < 0)
             throw new IllegalArgumentException("Stat points cannot be negative");
-        }
 
-        PlayerState playerState = getOrCreatePlayerState();
-        if (playerState.getPendingStatPoints() < POINTS_PER_LEVEL) {
+        PlayerState ps = getOrCreatePlayerState(runId);
+        if (ps.getPendingStatPoints() < POINTS_PER_LEVEL)
             throw new IllegalStateException("No pending stat points to distribute");
-        }
 
-        playerState.getStats().updateHealth(health);
-        playerState.getStats().updateAttack(attack);
-        playerState.getStats().updateDefense(defense);
-        playerState.getStats().updateMagic(magic);
-        playerState.setPendingStatPoints(playerState.getPendingStatPoints() - POINTS_PER_LEVEL);
-
-        return repository.save(playerState);
+        ps.getStats().updateHealth(health);
+        ps.getStats().updateAttack(attack);
+        ps.getStats().updateDefense(defense);
+        ps.getStats().updateMagic(magic);
+        ps.setPendingStatPoints(ps.getPendingStatPoints() - POINTS_PER_LEVEL);
+        return repository.save(ps);
     }
 
     // ── private helpers ──────────────────────────────────────────────────────
@@ -234,6 +254,16 @@ public class PlayerService {
         }
     }
 
+    private void awardGold(PlayerState ps, int enemyLevel, List<CombatEvent> events) {
+        int goldMin = enemyLevel * 10;
+        int goldMax = enemyLevel * 20;
+        int goldGained = goldMin + new Random().nextInt(goldMax - goldMin + 1);
+        ps.setGold(ps.getGold() + goldGained);
+        events.add(CombatEvent.of(CombatEventType.GOLD_GAINED)
+                .with("targetId", "player")
+                .with("amount", goldGained));
+    }
+
     private void dropItem(PlayerState ps, String enemyDefinitionId, List<CombatEvent> events) {
         if (enemyDefinitionId == null) return;
         CharacterDefinition def = characterLoader.getDefinition(enemyDefinitionId);
@@ -246,15 +276,17 @@ public class PlayerService {
                 .with("itemId", itemId));
     }
 
-    private PlayerState initializeNewPlayer() {
-        var def = characterLoader.getDefinition(DEFAULT_CHARACTER);
-        var initialChar = characterLoader.createCharacter("player", DEFAULT_CHARACTER, 1);
+    private PlayerState initializeNewPlayer(UUID runId, String classId) {
+        var def = characterLoader.getDefinition(classId);
+        var initialChar = characterLoader.createCharacter("player", classId, 1);
 
         PlayerState ps = new PlayerState();
+        ps.setRunId(runId);
         ps.setCharacterDefinitionId(def.getId());
         ps.setCharacterName(def.getName());
         ps.setLevel(1);
         ps.setCurrentXp(0);
+        ps.setGold(0);
         ps.setStats(new CharacterStats(
                 initialChar.getStats().getHealth(),
                 initialChar.getStats().getAttack(),
@@ -269,6 +301,15 @@ public class PlayerService {
     }
 
     // ── slot helpers ─────────────────────────────────────────────────────────
+
+    private void validateSlot(String itemId, EquipmentSlot slot) {
+        if (itemId == null || itemId.isEmpty()) return;
+        ItemDefinition item = itemRegistry.getItem(itemId);
+        EquipmentSlot expected = slotFor(item.getItemType());
+        if (expected != slot)
+            throw new IllegalArgumentException(
+                    "Item '" + itemId + "' (type " + item.getItemType() + ") does not fit slot " + slot);
+    }
 
     private EquipmentSlot slotFor(ItemType type) {
         return switch (type) {
@@ -313,21 +354,4 @@ public class PlayerService {
         return null;
     }
 
-    /** If current slot occupant exists, push it back to inventory. */
-    private void returnToInventory(PlayerState ps, Equipment eq, EquipmentSlot slot) {
-        String current = getSlot(eq, slot);
-        if (current != null) {
-            ps.getInventory().add(current);
-            setSlot(eq, slot, null);
-        }
-    }
-
-    /** If mainHand holds a TWO_HANDED item, move it back to inventory. */
-    private void displaceTwoHandedIfPresent(PlayerState ps, Equipment eq) {
-        String mainHandId = eq.getMainHand();
-        if (mainHandId != null && itemRegistry.getItem(mainHandId).getItemType() == ItemType.TWO_HANDED) {
-            ps.getInventory().add(mainHandId);
-            eq.setMainHand(null);
-        }
-    }
 }

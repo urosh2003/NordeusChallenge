@@ -4,6 +4,7 @@ import com.example.backend.combat.MoveDefinition;
 import com.example.backend.combat.MoveRegistry;
 import com.example.backend.dtos.responces.*;
 import com.example.backend.models.*;
+import com.example.backend.models.EnvironmentDefinition;
 import com.example.backend.repositories.CombatInstanceRepository;
 import com.example.backend.repositories.RunRepository;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ public class RunService {
             new String[]{"goblinMage",   "Goblin Mage"}
     );
 
+    private static final int GRAPH_HEIGHT = 10;
+    private static final int BOSS_ROW = GRAPH_HEIGHT - 1;
+
     private final RunRepository runRepo;
     private final CombatInstanceRepository combatRepo;
     private final CombatSessionService combatSessionService;
@@ -32,11 +36,14 @@ public class RunService {
     private final MoveRegistry moveRegistry;
     private final ItemRegistry itemRegistry;
     private final PlayerService playerService;
+    private final ShopConfig shopConfig;
+    private final EnvironmentLoader environmentLoader;
 
     public RunService(RunRepository runRepo, CombatInstanceRepository combatRepo,
                       CombatSessionService combatSessionService, CharacterLoader characterLoader,
                       MoveRegistry moveRegistry, ItemRegistry itemRegistry,
-                      PlayerService playerService) {
+                      PlayerService playerService, ShopConfig shopConfig,
+                      EnvironmentLoader environmentLoader) {
         this.runRepo = runRepo;
         this.combatRepo = combatRepo;
         this.combatSessionService = combatSessionService;
@@ -44,146 +51,226 @@ public class RunService {
         this.moveRegistry = moveRegistry;
         this.itemRegistry = itemRegistry;
         this.playerService = playerService;
+        this.shopConfig = shopConfig;
+        this.environmentLoader = environmentLoader;
     }
 
-    /** Creates a new run: shuffles the 5 enemy types and assigns them levels 1–5 in order. */
-    public RunResponse createRun() {
-        List<String[]> shuffled = new ArrayList<>(ENEMY_POOL);
-        Collections.shuffle(shuffled);
+    public RunResponse createRun(String classId) {
+        Random rng = new Random();
+        List<EncounterNode> nodes = generateGraph(rng);
 
-        List<EncounterSlot> encounters = new ArrayList<>();
-        for (int i = 0; i < shuffled.size(); i++) {
-            String[] enemy = shuffled.get(i);
-            encounters.add(new EncounterSlot(enemy[0], enemy[1], i + 1, 0));
-        }
+        String startNodeId = nodes.stream()
+                .filter(n -> n.getRow() == 0)
+                .findFirst()
+                .orElseThrow()
+                .getId();
 
         Run run = new Run();
-        run.setEncounters(encounters);
+        run.setNodes(nodes);
+        run.setCurrentNodeId(startNodeId);
         run = runRepo.save(run);
+        playerService.createPlayerStateForRun(run.getId(), classId);
         return RunResponse.from(run);
     }
 
     @Transactional(readOnly = true)
     public RunResponse getRun(UUID runId) {
-        return RunResponse.from(loadRun(runId));
+        Run run = loadRun(runId);
+        UUID activeCombatId = combatRepo.findByRunIdAndStatus(runId, CombatStatus.ACTIVE)
+                .map(CombatInstance::getId)
+                .orElse(null);
+        return RunResponse.from(run, activeCombatId);
     }
 
     /**
-     * Start (or replay) a combat for the given encounter index.
-     * Rules:
-     *  - No active combat may already exist for this run.
-     *  - index must be <= currentEncounterIndex (can't skip ahead).
-     *  - First-time fight: index == currentEncounterIndex.
-     *  - Replay: completions > 0 on any already-cleared index.
+     * Start combat for a COMBAT or BOSS node.
+     * - nodeId == currentNodeId: fight (or replay) the current node.
+     * - nodeId ∈ currentNode.nextNodeIds AND currentNode.completions > 0: advance then fight.
      */
-    public CombatResponse startCombat(UUID runId, int index) {
+    public CombatResponse startCombat(UUID runId, String nodeId) {
         Run run = loadRun(runId);
 
-        if (run.getStatus() == RunStatus.COMPLETED) {
+        if (run.getStatus() == RunStatus.COMPLETED)
             throw new IllegalStateException("Run is already completed");
-        }
-        if (combatRepo.existsByRunIdAndStatus(runId, CombatStatus.ACTIVE)) {
+        if (combatRepo.existsByRunIdAndStatus(runId, CombatStatus.ACTIVE))
             throw new IllegalStateException("A combat is already in progress for this run");
-        }
-        if (index < 0 || index >= run.getEncounters().size()) {
-            throw new IllegalArgumentException("Invalid encounter index: " + index);
+
+        EncounterNode current = findNode(run, run.getCurrentNodeId());
+        boolean isCurrent = nodeId.equals(run.getCurrentNodeId());
+        boolean isNextNode = current.getNextNodeIds().contains(nodeId) && current.getCompletions() > 0;
+
+        if (!isCurrent && !isNextNode)
+            throw new IllegalStateException("Node " + nodeId + " is not accessible from the current position");
+
+        if (isNextNode) {
+            run.setCurrentNodeId(nodeId);
+            runRepo.save(run);
         }
 
-        EncounterSlot slot = run.getEncounters().get(index);
-        boolean isCurrentEncounter = (index == run.getCurrentEncounterIndex());
-        boolean isReplay = (slot.getCompletions() > 0);
-
-        if (!isCurrentEncounter && !isReplay) {
-            throw new IllegalStateException("Encounter " + index + " is not yet available");
-        }
+        EncounterNode node = findNode(run, nodeId);
+        if (node.getType() != EncounterType.COMBAT && node.getType() != EncounterType.BOSS)
+            throw new IllegalStateException("Node " + nodeId + " is not a combat node — use /enter instead");
 
         return combatSessionService.createCombat(
-                slot.getEnemyDefinitionId(), slot.getEnemyLevel(), runId, index);
+                node.getEnemyDefinitionId(), node.getEnemyLevel(), runId, nodeId, node.getEnvironmentId());
     }
 
     /**
-     * Advance to the next encounter after winning the current one.
-     * Call when the player chooses "Continue" instead of "Replay".
+     * Enter a SHOP or REST_SITE node.
+     * On the first visit: generates shop offers (SHOP) or heals the player (REST_SITE) and increments completions.
+     * Subsequent calls return current state without re-applying effects.
      */
-    public RunResponse continueRun(UUID runId) {
+    public NodeEnterResponse enterNode(UUID runId, String nodeId) {
         Run run = loadRun(runId);
 
-        if (run.getStatus() == RunStatus.COMPLETED) {
+        if (run.getStatus() == RunStatus.COMPLETED)
             throw new IllegalStateException("Run is already completed");
-        }
-        if (combatRepo.existsByRunIdAndStatus(runId, CombatStatus.ACTIVE)) {
-            throw new IllegalStateException("Cannot continue while a combat is in progress");
-        }
 
-        EncounterSlot current = run.getEncounters().get(run.getCurrentEncounterIndex());
-        if (current.getCompletions() == 0) {
-            throw new IllegalStateException("Current encounter has not been completed yet");
-        }
+        EncounterNode current = findNode(run, run.getCurrentNodeId());
+        boolean isCurrent = nodeId.equals(run.getCurrentNodeId());
+        boolean isNextNode = current.getNextNodeIds().contains(nodeId) && current.getCompletions() > 0;
 
-        int nextIndex = run.getCurrentEncounterIndex() + 1;
-        if (nextIndex >= run.getEncounters().size()) {
-            run.setStatus(RunStatus.COMPLETED);
-        } else {
-            run.setCurrentEncounterIndex(nextIndex);
+        if (!isCurrent && !isNextNode)
+            throw new IllegalStateException("Node " + nodeId + " is not accessible from the current position");
+
+        if (isNextNode) {
+            run.setCurrentNodeId(nodeId);
         }
 
-        return RunResponse.from(runRepo.save(run));
-    }
+        EncounterNode node = findNode(run, nodeId);
+        if (node.getType() != EncounterType.SHOP && node.getType() != EncounterType.REST_SITE)
+            throw new IllegalStateException("Node " + nodeId + " is not a shop or rest site — use /start for combat");
 
-    /** Whether any combat at all is currently active (used to block move-equipping). */
-    @Transactional(readOnly = true)
-    public boolean anyActiveCombat() {
-        return combatRepo.existsByStatus(CombatStatus.ACTIVE);
+        PlayerState ps = playerService.getOrCreatePlayerState(runId);
+
+        if (node.getCompletions() == 0) {
+            if (node.getType() == EncounterType.SHOP) {
+                node.setShopOffers(generateShopOffers(new Random()));
+            } else {
+                applyRest(ps);
+            }
+            node.incrementCompletions();
+        }
+
+        playerService.saveState(ps);
+        runRepo.save(run);
+
+        return new NodeEnterResponse(RunResponse.from(run), PlayerStateResponse.from(ps));
     }
 
     /**
-     * Returns everything the client needs to set up the full run UI in one call:
-     * all 5 enemy definitions with computed stats, full move definitions for every
-     * move that appears (enemy or player), full item definitions for every possible
-     * drop and every item the player already owns, and the player's current loadout.
+     * Buy an offer from the current shop node.
      */
+    public PlayerStateResponse buyOffer(UUID runId, String offerId) {
+        Run run = loadRun(runId);
+        EncounterNode node = findNode(run, run.getCurrentNodeId());
+
+        if (node.getType() != EncounterType.SHOP)
+            throw new IllegalStateException("Current node is not a shop");
+        if (node.getCompletions() == 0)
+            throw new IllegalStateException("You must enter the shop before buying");
+
+        ShopOffer offer = node.getShopOffers().stream()
+                .filter(o -> o.getOfferId().equals(offerId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Offer not found: " + offerId));
+
+        if (offer.isPurchased())
+            throw new IllegalStateException("Offer already purchased");
+
+        PlayerState ps = playerService.getOrCreatePlayerState(runId);
+        if (ps.getGold() < offer.getCost())
+            throw new IllegalStateException("Insufficient gold (have " + ps.getGold() + ", need " + offer.getCost() + ")");
+
+        ps.setGold(ps.getGold() - offer.getCost());
+
+        if (offer.getType() == ShopOffer.OfferType.ITEM) {
+            ps.getInventory().add(offer.getItemId());
+        } else {
+            switch (offer.getStat()) {
+                case "health"  -> ps.getStats().updateHealth(offer.getAmount());
+                case "attack"  -> ps.getStats().updateAttack(offer.getAmount());
+                case "defense" -> ps.getStats().updateDefense(offer.getAmount());
+                case "magic"   -> ps.getStats().updateMagic(offer.getAmount());
+                default -> throw new IllegalArgumentException("Unknown stat: " + offer.getStat());
+            }
+        }
+
+        offer.setPurchased(true);
+        playerService.saveState(ps);
+        runRepo.save(run);
+
+        return PlayerStateResponse.from(ps);
+    }
+
+    /**
+     * Sell an item from inventory at the current shop. Sell price = 40% of item cost, minimum 5 gold.
+     */
+    public PlayerStateResponse sellItem(UUID runId, String itemId) {
+        Run run = loadRun(runId);
+        EncounterNode node = findNode(run, run.getCurrentNodeId());
+
+        if (node.getType() != EncounterType.SHOP)
+            throw new IllegalStateException("Current node is not a shop");
+
+        PlayerState ps = playerService.getOrCreatePlayerState(runId);
+        if (!ps.getInventory().contains(itemId))
+            throw new IllegalArgumentException("Item not in inventory: " + itemId);
+
+        ItemDefinition item = itemRegistry.getItem(itemId);
+        int sellPrice = Math.max(5, item.getCost() * shopConfig.getSellPricePercent() / 100);
+
+        ps.getInventory().remove(itemId);
+        ps.setGold(ps.getGold() + sellPrice);
+
+        playerService.saveState(ps);
+        return PlayerStateResponse.from(ps);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasActiveCombat(UUID runId) {
+        return combatRepo.existsByRunIdAndStatus(runId, CombatStatus.ACTIVE);
+    }
+
     @Transactional(readOnly = true)
     public RunConfigResponse getRunConfig(UUID runId) {
         Run run = loadRun(runId);
-        PlayerState playerState = playerService.getOrCreatePlayerState();
+        PlayerState playerState = playerService.getOrCreatePlayerState(runId);
 
         Set<String> allMoveIds = new LinkedHashSet<>();
         Set<String> allItemIds = new LinkedHashSet<>();
 
-        // Build one EncounterConfig per slot
         List<EncounterConfig> encounterConfigs = new ArrayList<>();
-        List<EncounterSlot> slots = run.getEncounters();
-        for (int i = 0; i < slots.size(); i++) {
-            EncounterSlot slot = slots.get(i);
-            CharacterDefinition def = characterLoader.getDefinition(slot.getEnemyDefinitionId());
+        for (EncounterNode node : run.getNodes()) {
+            EncounterConfig config;
 
-            // Reuse CharacterLoader's stat computation via createCharacter
-            Character enemy = characterLoader.createCharacter("_", slot.getEnemyDefinitionId(), slot.getEnemyLevel());
-            CharacterStats stats = enemy.getStats();
+            if (node.getType() == EncounterType.COMBAT || node.getType() == EncounterType.BOSS) {
+                CharacterDefinition def = characterLoader.getDefinition(node.getEnemyDefinitionId());
+                Character enemy = characterLoader.createCharacter("_", node.getEnemyDefinitionId(), node.getEnemyLevel());
+                CharacterStats stats = enemy.getStats();
+                List<String> drops = def.getPossibleDrops() != null ? def.getPossibleDrops() : List.of();
 
-            List<String> drops = def.getPossibleDrops() != null ? def.getPossibleDrops() : List.of();
+                allMoveIds.addAll(def.getMoves());
+                allItemIds.addAll(drops);
 
-            encounterConfigs.add(new EncounterConfig(
-                    i,
-                    slot.getEnemyDefinitionId(),
-                    slot.getEnemyName(),
-                    slot.getEnemyLevel(),
-                    stats,
-                    enemy.getMaxHp(),
-                    enemy.getMaxMana(),
-                    enemy.getManaPerTurn(),
-                    enemy.getMaxStamina(),
-                    enemy.getStaminaPerTurn(),
-                    def.getMoves(),
-                    drops,
-                    slot.getCompletions()
-            ));
-
-            allMoveIds.addAll(def.getMoves());
-            allItemIds.addAll(drops);
+                config = new EncounterConfig(
+                        node.getId(), node.getRow(), node.getColumn(), node.getType(),
+                        node.getEnemyDefinitionId(), node.getEnemyName(), node.getEnemyLevel(),
+                        stats, enemy.getMaxHp(), enemy.getMaxMana(), enemy.getManaPerTurn(),
+                        enemy.getMaxStamina(), enemy.getStaminaPerTurn(),
+                        def.getMoves(), drops, node.getCompletions(), node.getNextNodeIds()
+                );
+            } else {
+                config = new EncounterConfig(
+                        node.getId(), node.getRow(), node.getColumn(), node.getType(),
+                        null, null, 0,
+                        null, 0, 0, 0, 0, 0,
+                        List.of(), List.of(), node.getCompletions(), node.getNextNodeIds()
+                );
+            }
+            encounterConfigs.add(config);
         }
 
-        // Include everything the player already knows/owns
         allMoveIds.addAll(playerState.getKnownMoves());
         allItemIds.addAll(playerState.getInventory());
         allItemIds.addAll(playerState.getEquipment().getAllEquipped());
@@ -204,7 +291,155 @@ public class RunService {
                 playerState.getEquipment()
         );
 
-        return new RunConfigResponse(run.getId(), encounterConfigs, moves, items, player);
+        Map<String, EnvironmentDefinition> environments = environmentLoader.getAll().stream()
+                .collect(Collectors.toMap(EnvironmentDefinition::getId, e -> e,
+                        (a, b) -> a, LinkedHashMap::new));
+
+        return new RunConfigResponse(run.getId(), encounterConfigs, moves, items, player, environments);
+    }
+
+    // ── Shop helpers ─────────────────────────────────────────────────────────
+
+    private List<ShopOffer> generateShopOffers(Random rng) {
+        List<ShopOffer> offers = new ArrayList<>();
+        String[] statNames = {"health", "attack", "defense", "magic"};
+
+        List<String> statsPool = new ArrayList<>(List.of(statNames));
+        Collections.shuffle(statsPool, rng);
+        int statCount = Math.min(shopConfig.getStatOfferCount(), statsPool.size());
+        for (int i = 0; i < statCount; i++) {
+            String stat = statsPool.get(i);
+            int range = shopConfig.getStatAmountMax() - shopConfig.getStatAmountMin();
+            int amount = shopConfig.getStatAmountMin() + (range > 0 ? rng.nextInt(range + 1) : 0);
+            int cost = amount * shopConfig.getStatCostPerPoint();
+            offers.add(new ShopOffer(UUID.randomUUID().toString(),
+                    ShopOffer.OfferType.STAT_UPGRADE, cost, null, stat, amount, false));
+        }
+
+        List<ItemDefinition> purchasable = itemRegistry.getAll().values().stream()
+                .filter(ItemDefinition::isPurchasable)
+                .collect(Collectors.toList());
+        Collections.shuffle(purchasable, rng);
+        int itemCount = Math.min(shopConfig.getItemOfferCount(), purchasable.size());
+        for (int i = 0; i < itemCount; i++) {
+            ItemDefinition item = purchasable.get(i);
+            offers.add(new ShopOffer(UUID.randomUUID().toString(),
+                    ShopOffer.OfferType.ITEM, item.getCost(), item.getId(), null, 0, false));
+        }
+
+        return offers;
+    }
+
+    private void applyRest(PlayerState ps) {
+        Character combatChar = playerService.buildCombatCharacter(ps);
+        int maxHp = combatChar.getMaxHp();
+        int healAmount = Math.max(1, maxHp * 40 / 100);
+        ps.setCurrentHp(Math.min(maxHp, ps.getCurrentHp() > 0 ? ps.getCurrentHp() + healAmount : maxHp));
+        ps.setCurrentMana(combatChar.getMaxMana());
+        ps.setCurrentStamina(combatChar.getMaxStamina());
+    }
+
+    // ── Graph generation ─────────────────────────────────────────────────────
+
+    private List<EncounterNode> generateGraph(Random rng) {
+        List<List<EncounterNode>> rows = new ArrayList<>();
+        List<String> environmentIds = environmentLoader.getAll().stream()
+                .map(EnvironmentDefinition::getId)
+                .collect(Collectors.toList());
+
+        for (int r = 0; r < GRAPH_HEIGHT; r++) {
+            int width = (r == 0 || r == BOSS_ROW) ? 1 : 3 + rng.nextInt(2);
+            List<EncounterNode> row = new ArrayList<>();
+            for (int col = 0; col < width; col++) {
+                EncounterType type = pickEncounterType(r, rng);
+                String defId = null, defName = null, envId = null;
+
+                if (type == EncounterType.COMBAT || type == EncounterType.BOSS) {
+                    String[] enemy = ENEMY_POOL.get(rng.nextInt(ENEMY_POOL.size()));
+                    defId = enemy[0];
+                    defName = enemy[1];
+                    envId = environmentIds.get(rng.nextInt(environmentIds.size()));
+                }
+
+                EncounterNode node = new EncounterNode(
+                        UUID.randomUUID().toString(),
+                        r, col, type,
+                        defId, defName,
+                        r + 1,
+                        envId,
+                        0,
+                        new ArrayList<>(),
+                        new ArrayList<>()
+                );
+                row.add(node);
+            }
+            rows.add(row);
+        }
+
+        for (int r = 0; r < GRAPH_HEIGHT - 1; r++) {
+            connectRows(rows.get(r), rows.get(r + 1), rng);
+        }
+
+        return rows.stream().flatMap(List::stream).collect(Collectors.toList());
+    }
+
+    private EncounterType pickEncounterType(int row, Random rng) {
+        if (row == 0) return EncounterType.COMBAT;
+        if (row == BOSS_ROW) return EncounterType.BOSS;
+
+        Map<String, Integer> weights = shopConfig.getEncounterTypeWeights();
+        int total = weights.values().stream().mapToInt(Integer::intValue).sum();
+        int roll = rng.nextInt(total);
+        int cumulative = 0;
+        for (Map.Entry<String, Integer> entry : weights.entrySet()) {
+            cumulative += entry.getValue();
+            if (roll < cumulative) {
+                return EncounterType.valueOf(entry.getKey());
+            }
+        }
+        return EncounterType.COMBAT;
+    }
+
+    private void connectRows(List<EncounterNode> fromRow, List<EncounterNode> toRow, Random rng) {
+        int n = fromRow.size();
+        int m = toRow.size();
+        boolean[] covered = new boolean[m];
+        int[] baseTarget = new int[n];
+
+        for (int i = 0; i < n; i++) {
+            int j = (n == 1) ? 0 : (int) Math.round((double) i * (m - 1) / (n - 1));
+            baseTarget[i] = j;
+            fromRow.get(i).getNextNodeIds().add(toRow.get(j).getId());
+            covered[j] = true;
+        }
+
+        for (int j = 0; j < m; j++) {
+            if (!covered[j]) {
+                int i = (m == 1) ? 0 : Math.min((int) Math.round((double) j * (n - 1) / (m - 1)), n - 1);
+                fromRow.get(i).getNextNodeIds().add(toRow.get(j).getId());
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            if (rng.nextDouble() < 0.4) {
+                int adj = baseTarget[i] + (rng.nextBoolean() ? 1 : -1);
+                if (adj >= 0 && adj < m) {
+                    String adjId = toRow.get(adj).getId();
+                    if (!fromRow.get(i).getNextNodeIds().contains(adjId)) {
+                        fromRow.get(i).getNextNodeIds().add(adjId);
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private EncounterNode findNode(Run run, String nodeId) {
+        return run.getNodes().stream()
+                .filter(n -> n.getId().equals(nodeId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Node not found: " + nodeId));
     }
 
     private Run loadRun(UUID runId) {

@@ -37,5 +37,6 @@ public class CombatInstance {
 
     // Set when this combat belongs to a run
     private UUID runId;
-    private int encounterIndex;
+    private String encounterNodeId;
+    private String environmentId;
 }

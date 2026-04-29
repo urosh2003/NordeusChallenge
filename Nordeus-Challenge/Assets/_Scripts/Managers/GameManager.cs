@@ -26,10 +26,15 @@ public class GameManager : MonoBehaviour
     public RunResponse         CurrentRun        { get; private set; }
     public RunConfig           CurrentRunConfig  { get; private set; }
     public string              CurrentCombatId   { get; private set; }
+    public string              CurrentEnvironmentId { get; private set; }
     public CombatState         CurrentCombat     { get; private set; }
     public PlayerStateResponse PlayerState       { get; private set; }
     public bool                IsPlayerTurn      { get; private set; } = true;
     public bool                IsCombatActive    => CurrentCombatId != null && CurrentCombat != null;
+
+    /// Looks up the current combat's environment definition from the run config. Null if none.
+    public EnvironmentDefinition CurrentEnvironment =>
+        CurrentRunConfig?.GetEnvironment(CurrentEnvironmentId);
 
     /// True when the player can legally submit a move (their turn, combat active, no events playing back).
     public bool CanPlayerAct =>
@@ -47,6 +52,9 @@ public class GameManager : MonoBehaviour
     /// Fired after every combat action (player move, enemy turn, combat start).
     /// Check events list for COMBAT_ENDED, MOVE_LEARNT, LEVEL_UP, etc.
     public static event Action<CombatResponse>      OnCombatUpdated;
+
+    /// Fired when entering a SHOP or REST_SITE node (not fired for combat nodes).
+    public static event Action<EnterNodeResponse>   OnNodeEntered;
 
     /// Fired whenever player state changes (after victory rewards, equip, level-up spend).
     public static event Action<PlayerStateResponse> OnPlayerStateUpdated;
@@ -88,11 +96,14 @@ public class GameManager : MonoBehaviour
 
     // ── Run API ───────────────────────────────────────────────────────────────
 
-    /// <summary>POST /api/runs — generate a new 5-encounter run.</summary>
-    public void CreateRun(Action<RunResponse> onSuccess = null, Action<string> onError = null)
-        => StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs", null,
+    /// <summary>POST /api/runs — start a new run with the chosen class (e.g. "knight").</summary>
+    public void CreateRun(string classId, Action<RunResponse> onSuccess = null, Action<string> onError = null)
+    {
+        var body = JsonUtility.ToJson(new CreateRunRequest(classId));
+        StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs", body,
             json => { var r = JsonUtility.FromJson<RunResponse>(json); ApplyRun(r); onSuccess?.Invoke(r); },
             err  => HandleError(err, onError)));
+    }
 
     /// <summary>GET /api/runs/{runId} — load a run by a known ID (used by Continue Run).</summary>
     public void LoadRun(string runId, Action<RunResponse> onSuccess = null, Action<string> onError = null)
@@ -128,29 +139,33 @@ public class GameManager : MonoBehaviour
             err  => HandleError(err, onError)));
     }
 
-    /// <summary>
-    /// POST /api/runs/{runId}/encounters/{index}/start — enter a combat.
-    /// Works for both first-time fights and replays.
-    /// After this, use PlayerAction / TriggerEnemyTurn with the stored combatId.
-    /// </summary>
-    public void StartCombat(int encounterIndex, Action<CombatResponse> onSuccess = null, Action<string> onError = null)
+    /// <summary>POST /api/runs/{runId}/nodes/{nodeId}/start — enter combat at the given map node.</summary>
+    public void StartNodeCombat(string nodeId, Action<CombatResponse> onSuccess = null, Action<string> onError = null)
     {
         if (!EnsureRun(onError)) return;
-        StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/encounters/{encounterIndex}/start", null,
+        StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/nodes/{nodeId}/start", null,
             json => { var r = JsonUtility.FromJson<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
             err  => HandleError(err, onError)));
     }
 
     /// <summary>
-    /// POST /api/runs/{runId}/continue — advance past the current encounter.
-    /// Call when the player chooses "Continue" after winning (instead of "Replay").
+    /// POST /api/runs/{runId}/nodes/{nodeId}/enter — enter a SHOP or REST_SITE node.
+    /// Works for both the current node and an eligible next node.
+    /// First visit applies the node effect (heal / generate shop offers); subsequent calls return current state.
     /// </summary>
-    public void ContinueRun(Action<RunResponse> onSuccess = null, Action<string> onError = null)
+    public void EnterNode(string nodeId, Action<EnterNodeResponse> onSuccess = null, Action<string> onError = null)
     {
         if (!EnsureRun(onError)) return;
-        StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/continue", null,
-            json => { var r = JsonUtility.FromJson<RunResponse>(json); ApplyRun(r); onSuccess?.Invoke(r); },
-            err  => HandleError(err, onError)));
+        StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/nodes/{nodeId}/enter", null,
+            json =>
+            {
+                var r = JsonUtility.FromJson<EnterNodeResponse>(json);
+                ApplyRun(r.run);
+                if (r.player != null) ApplyPlayer(r.player);
+                OnNodeEntered?.Invoke(r);
+                onSuccess?.Invoke(r);
+            },
+            err => HandleError(err, onError)));
     }
 
     // =========================================================================
@@ -182,64 +197,92 @@ public class GameManager : MonoBehaviour
             err  => HandleError(err, onError)));
     }
 
+    /// <summary>
+    /// GET /api/combats/{combatId} — restore a combat that was already in progress.
+    /// Used when continuing a run that had an active fight (activeCombatId from RunResponse).
+    /// </summary>
+    public void LoadActiveCombat(string combatId, Action<CombatResponse> onSuccess = null, Action<string> onError = null)
+        => StartCoroutine(HttpHelpers.Get($"{baseUrl}/combats/{combatId}",
+            json => { var r = JsonUtility.FromJson<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
+            err  => HandleError(err, onError)));
+
+    // =========================================================================
+    // SHOP API
+    // =========================================================================
+
+    /// <summary>POST /api/runs/{runId}/shop/buy/{offerId} — purchase a shop offer.</summary>
+    public void BuyShopOffer(string offerId, Action<PlayerStateResponse> onSuccess = null, Action<string> onError = null)
+    {
+        if (!EnsureRun(onError)) return;
+        StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/shop/buy/{offerId}", null,
+            json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
+            err  => HandleError(err, onError)));
+    }
+
+    /// <summary>POST /api/runs/{runId}/shop/sell/{itemId} — sell an inventory item (40% base cost, min 5g).</summary>
+    public void SellItem(string itemId, Action<PlayerStateResponse> onSuccess = null, Action<string> onError = null)
+    {
+        if (!EnsureRun(onError)) return;
+        StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/shop/sell/{itemId}", null,
+            json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
+            err  => HandleError(err, onError)));
+    }
+
     // =========================================================================
     // PLAYER API
     // =========================================================================
 
-    /// <summary>GET /api/player — load or refresh player state.</summary>
+    /// <summary>GET /api/runs/{runId}/player — load or refresh player state.</summary>
     public void GetPlayerState(Action<PlayerStateResponse> onSuccess = null, Action<string> onError = null)
-        => StartCoroutine(HttpHelpers.Get($"{baseUrl}/player",
+    {
+        if (!EnsureRun(onError)) return;
+        StartCoroutine(HttpHelpers.Get($"{baseUrl}/runs/{CurrentRun.runId}/player",
             json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
             err  => HandleError(err, onError)));
+    }
 
     /// <summary>
-    /// PUT /api/player/moves — change the 4 moves equipped for the next combat.
+    /// PUT /api/runs/{runId}/player/moves — change the 4 moves equipped for the next combat.
     /// Blocked by the server if a combat is currently active (returns 409).
     /// </summary>
     public void EquipMoves(List<string> moveIds, Action<PlayerStateResponse> onSuccess = null, Action<string> onError = null)
     {
+        if (!EnsureRun(onError)) return;
         var body = JsonUtility.ToJson(new EquipMovesRequest(moveIds));
-        StartCoroutine(HttpHelpers.Put($"{baseUrl}/player/moves", body,
+        StartCoroutine(HttpHelpers.Put($"{baseUrl}/runs/{CurrentRun.runId}/player/moves", body,
             json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
             err  => HandleError(err, onError)));
     }
 
     /// <summary>
-    /// POST /api/player/equip — move an item from inventory into its equipment slot.
-    /// If the slot was occupied the old item goes back to inventory automatically.
+    /// PUT /api/runs/{runId}/player/equipment — commit the full equipment loadout at once.
+    /// Pass the complete desired Equipment (null slots = empty). All previously equipped items
+    /// not present in the new loadout are automatically returned to inventory by the server.
+    /// Blocked during active combat (409).
     /// </summary>
-    public void EquipItem(string itemId, Action<PlayerStateResponse> onSuccess = null, Action<string> onError = null)
+    public void SetEquipment(Equipment equipment, Action<PlayerStateResponse> onSuccess = null, Action<string> onError = null)
     {
-        var body = JsonUtility.ToJson(new EquipItemRequest(itemId));
-        StartCoroutine(HttpHelpers.Post($"{baseUrl}/player/equip", body,
+        if (!EnsureRun(onError)) return;
+        var body = JsonConvert.SerializeObject(new EquipEquipmentRequest(equipment));
+        StartCoroutine(HttpHelpers.Put($"{baseUrl}/runs/{CurrentRun.runId}/player/equipment", body,
             json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
             err  => HandleError(err, onError)));
     }
 
     /// <summary>
-    /// POST /api/player/unequip — move an equipped item back into inventory.
-    /// </summary>
-    public void UnequipItem(string itemId, Action<PlayerStateResponse> onSuccess = null, Action<string> onError = null)
-    {
-        var body = JsonUtility.ToJson(new EquipItemRequest(itemId));
-        StartCoroutine(HttpHelpers.Post($"{baseUrl}/player/unequip", body,
-            json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
-            err  => HandleError(err, onError)));
-    }
-
-    /// <summary>
-    /// POST /api/player/level-up — spend 3 stat points from one pending level-up.
+    /// POST /api/runs/{runId}/player/level-up — spend 3 stat points from one pending level-up.
     /// health + attack + defense + magic must equal exactly 3.
     /// Call once per pending level-up (check PlayerState.pendingStatPoints).
     /// </summary>
     public void SpendLevelUpPoints(int health, int attack, int defense, int magic,
                                    Action<PlayerStateResponse> onSuccess = null, Action<string> onError = null)
     {
+        if (!EnsureRun(onError)) return;
         var req = new StatDistributionRequest(health, attack, defense, magic);
         if (!req.IsValid) { HandleError("Stat points must sum to exactly 3 with no negatives.", onError); return; }
 
         var body = JsonUtility.ToJson(req);
-        StartCoroutine(HttpHelpers.Post($"{baseUrl}/player/level-up", body,
+        StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/player/level-up", body,
             json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
             err  => HandleError(err, onError)));
     }
@@ -260,10 +303,15 @@ public class GameManager : MonoBehaviour
 
     private void ApplyCombat(CombatResponse response)
     {
-        CurrentCombatId = response.combatId;
-        CurrentCombat   = response.state;
+        CurrentCombatId      = response.combatId;
+        CurrentCombat        = response.state;
+        CurrentEnvironmentId = response.environmentId;
 
-        // Determine whose turn it is based on the last TURN_CHANGED event
+        // Authoritative turn from server field (reliable on load/restore with empty events)
+        if (!string.IsNullOrEmpty(response.currentTurn))
+            IsPlayerTurn = response.currentTurn == "PLAYER";
+
+        // Events override (mid-combat transitions)
         if (response.events != null)
         {
             foreach (var e in response.events)
@@ -272,10 +320,7 @@ public class GameManager : MonoBehaviour
                     IsPlayerTurn = e.newTurn == "PLAYER";
 
                 if (e.EventType == CombatEventType.COMBAT_ENDED)
-                {
-                    // Combat is over — clear the active combat id so IsCombatActive returns false
                     CurrentCombatId = null;
-                }
             }
         }
 

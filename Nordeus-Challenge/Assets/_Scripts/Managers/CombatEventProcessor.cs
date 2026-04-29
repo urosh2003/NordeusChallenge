@@ -88,6 +88,13 @@ public class CombatEventProcessor : MonoBehaviour
     /// Fired when an item drops after combat. event.itemId is the dropped item's ID.
     public static event Action<CombatEvent> OnItemDropped;
 
+    /// Fired when gold is awarded after combat. event.amount is the gold gained.
+    public static event Action<CombatEvent> OnGoldGained;
+
+    /// Fired at end of each round when an environment effect applies to a combatant.
+    /// event.targetId, event.resourceType ("HEALTH"/"MANA"/"STAMINA"), event.effectType ("GAIN"/"LOSE"), event.amount.
+    public static event Action<CombatEvent> OnEnvironmentEffect;
+
     /// Fires for every single event — useful for appending to an event-log UI.
     public static event Action<CombatEvent> OnAnyEvent;
 
@@ -169,6 +176,8 @@ public class CombatEventProcessor : MonoBehaviour
             case CombatEventType.RESOURCE_REGEN:        OnResourceRegen?.Invoke(e);        break;
             case CombatEventType.RESOURCE_SPENT:        OnResourceSpent?.Invoke(e);        break;
             case CombatEventType.ITEM_DROPPED:          OnItemDropped?.Invoke(e);          break;
+            case CombatEventType.GOLD_GAINED:           OnGoldGained?.Invoke(e);           break;
+            case CombatEventType.ENVIRONMENT_EFFECT:    OnEnvironmentEffect?.Invoke(e);    break;
         }
     }
 }

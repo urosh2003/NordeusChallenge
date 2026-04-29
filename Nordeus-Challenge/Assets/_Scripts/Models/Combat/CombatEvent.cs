@@ -45,6 +45,11 @@ public class CombatEvent
     // ITEM_DROPPED
     public string itemId;
 
+    // ENVIRONMENT_EFFECT
+    public string environmentId;
+    public string resourceType;  // "HEALTH" | "MANA" | "STAMINA"
+    public string effectType;    // "GAIN" | "LOSE"
+
     public CombatEventType EventType
     {
         get
@@ -73,6 +78,8 @@ public static class CombatEventFormatter
             CombatEventType.RESOURCE_REGEN        => $"{e.targetId} regenerated {e.manaGained} mana and {e.staminaGained} stamina.",
             CombatEventType.RESOURCE_SPENT        => $"{e.actorId} spent {e.amount} {e.costType}.",
             CombatEventType.ITEM_DROPPED          => $"Item dropped: {e.itemId}!",
+            CombatEventType.GOLD_GAINED           => $"Gained {e.amount} gold.",
+            CombatEventType.ENVIRONMENT_EFFECT    => $"{e.targetId} {e.effectType.ToLower()}s {e.amount} {e.resourceType.ToLower()} ({e.environmentId}).",
             _                                     => $"[{e.type}]"
         };
     }

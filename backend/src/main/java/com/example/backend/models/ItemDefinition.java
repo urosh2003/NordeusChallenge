@@ -12,4 +12,6 @@ public class ItemDefinition {
     private ItemType itemType;
     private CharacterStats bonusStats;
     private List<PassiveEffect> passiveEffects;
+    private int cost;
+    private boolean purchasable;
 }

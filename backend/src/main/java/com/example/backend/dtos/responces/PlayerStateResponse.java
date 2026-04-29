@@ -18,7 +18,11 @@ public record PlayerStateResponse(
         List<String> equippedMoves,
         int pendingStatPoints,
         List<String> inventory,
-        Equipment equipment
+        Equipment equipment,
+        int gold,
+        int currentHp,
+        int currentMana,
+        int currentStamina
 ) {
     public static PlayerStateResponse from(PlayerState ps) {
         return new PlayerStateResponse(
@@ -32,7 +36,11 @@ public record PlayerStateResponse(
                 ps.getEquippedMoves(),
                 ps.getPendingStatPoints(),
                 ps.getInventory(),
-                ps.getEquipment()
+                ps.getEquipment(),
+                ps.getGold(),
+                ps.getCurrentHp(),
+                ps.getCurrentMana(),
+                ps.getCurrentStamina()
         );
     }
 }

@@ -5,7 +5,9 @@
     "description": "A reliable iron blade. Good starting weapon.",
     "itemType": "ONE_HANDED",
     "bonusStats": { "health": 0, "attack": 2, "defense": 0, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 20,
+    "purchasable": true
   },
   {
     "id": "steel_sword",
@@ -13,7 +15,9 @@
     "description": "A well-forged sword with a sturdy guard.",
     "itemType": "ONE_HANDED",
     "bonusStats": { "health": 0, "attack": 3, "defense": 1, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 40,
+    "purchasable": true
   },
   {
     "id": "enchanted_blade",
@@ -21,7 +25,9 @@
     "description": "A sword humming with arcane energy, sharp in both body and magic.",
     "itemType": "ONE_HANDED",
     "bonusStats": { "health": 0, "attack": 2, "defense": 0, "magic": 2 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 40,
+    "purchasable": true
   },
   {
     "id": "bone_club",
@@ -29,7 +35,9 @@
     "description": "Crudely fashioned from large bones. Heavy and effective.",
     "itemType": "ONE_HANDED",
     "bonusStats": { "health": 1, "attack": 1, "defense": 0, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 20,
+    "purchasable": true
   },
   {
     "id": "battle_axe",
@@ -37,7 +45,9 @@
     "description": "A single-handed axe that delivers heavy blows.",
     "itemType": "ONE_HANDED",
     "bonusStats": { "health": 0, "attack": 3, "defense": 0, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 30,
+    "purchasable": true
   },
   {
     "id": "crystal_wand",
@@ -47,7 +57,9 @@
     "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 3 },
     "passiveEffects": [
       { "type": "BONUS_MANA_REGEN", "value": 1 }
-    ]
+    ],
+    "cost": 45,
+    "purchasable": true
   },
   {
     "id": "arcane_blade",
@@ -55,7 +67,9 @@
     "description": "A slender blade etched with runes of power.",
     "itemType": "ONE_HANDED",
     "bonusStats": { "health": 0, "attack": 1, "defense": 0, "magic": 3 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 40,
+    "purchasable": true
   },
   {
     "id": "rusty_axe",
@@ -63,7 +77,9 @@
     "description": "Old but still sharp enough to do real damage.",
     "itemType": "ONE_HANDED",
     "bonusStats": { "health": 0, "attack": 1, "defense": 0, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 15,
+    "purchasable": true
   },
   {
     "id": "greatsword",
@@ -71,7 +87,9 @@
     "description": "A massive two-handed blade that demands both hands and punishes enemies hard.",
     "itemType": "TWO_HANDED",
     "bonusStats": { "health": 0, "attack": 5, "defense": 0, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 50,
+    "purchasable": true
   },
   {
     "id": "war_axe",
@@ -81,7 +99,9 @@
     "bonusStats": { "health": 1, "attack": 4, "defense": 0, "magic": 0 },
     "passiveEffects": [
       { "type": "BONUS_STAMINA_REGEN", "value": 1 }
-    ]
+    ],
+    "cost": 65,
+    "purchasable": true
   },
   {
     "id": "dragon_slayer",
@@ -89,7 +109,9 @@
     "description": "A legendary great-blade etched with dragon-bane runes.",
     "itemType": "TWO_HANDED",
     "bonusStats": { "health": 0, "attack": 4, "defense": 2, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 60,
+    "purchasable": true
   },
   {
     "id": "staff_of_power",
@@ -99,7 +121,9 @@
     "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 5 },
     "passiveEffects": [
       { "type": "BONUS_MAX_MANA", "value": 10 }
-    ]
+    ],
+    "cost": 75,
+    "purchasable": true
   },
   {
     "id": "mystic_staff",
@@ -109,7 +133,9 @@
     "bonusStats": { "health": 1, "attack": 0, "defense": 0, "magic": 4 },
     "passiveEffects": [
       { "type": "BONUS_MANA_REGEN", "value": 1 }
-    ]
+    ],
+    "cost": 70,
+    "purchasable": true
   },
   {
     "id": "wooden_shield",
@@ -117,7 +143,9 @@
     "description": "A simple but effective shield carved from dense hardwood.",
     "itemType": "SHIELD",
     "bonusStats": { "health": 0, "attack": 0, "defense": 2, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 20,
+    "purchasable": true
   },
   {
     "id": "iron_shield",
@@ -125,7 +153,9 @@
     "description": "A solid iron shield that deflects most blows.",
     "itemType": "SHIELD",
     "bonusStats": { "health": 0, "attack": 0, "defense": 3, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 30,
+    "purchasable": true
   },
   {
     "id": "guardians_shield",
@@ -133,7 +163,9 @@
     "description": "A heavy tower shield adorned with a guardian's crest.",
     "itemType": "SHIELD",
     "bonusStats": { "health": 1, "attack": 0, "defense": 4, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 50,
+    "purchasable": true
   },
   {
     "id": "arcane_buckler",
@@ -143,7 +175,9 @@
     "bonusStats": { "health": 0, "attack": 0, "defense": 2, "magic": 1 },
     "passiveEffects": [
       { "type": "BONUS_MANA_REGEN", "value": 1 }
-    ]
+    ],
+    "cost": 45,
+    "purchasable": true
   },
   {
     "id": "leather_armor",
@@ -151,7 +185,9 @@
     "description": "Light and flexible armor made from cured hides.",
     "itemType": "ARMOR",
     "bonusStats": { "health": 1, "attack": 0, "defense": 2, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 30,
+    "purchasable": true
   },
   {
     "id": "chainmail",
@@ -159,7 +195,9 @@
     "description": "Interlocked rings of steel that offer solid protection.",
     "itemType": "ARMOR",
     "bonusStats": { "health": 2, "attack": 0, "defense": 3, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 50,
+    "purchasable": true
   },
   {
     "id": "plate_armor",
@@ -167,7 +205,9 @@
     "description": "Heavy full-plate that turns most attacks aside.",
     "itemType": "ARMOR",
     "bonusStats": { "health": 3, "attack": 0, "defense": 5, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 80,
+    "purchasable": true
   },
   {
     "id": "mystic_robes",
@@ -177,7 +217,9 @@
     "bonusStats": { "health": 0, "attack": 0, "defense": 1, "magic": 3 },
     "passiveEffects": [
       { "type": "BONUS_MAX_MANA", "value": 5 }
-    ]
+    ],
+    "cost": 60,
+    "purchasable": true
   },
   {
     "id": "fighters_gloves",
@@ -187,7 +229,9 @@
     "bonusStats": { "health": 0, "attack": 2, "defense": 0, "magic": 0 },
     "passiveEffects": [
       { "type": "BONUS_STAMINA_REGEN", "value": 1 }
-    ]
+    ],
+    "cost": 35,
+    "purchasable": true
   },
   {
     "id": "arcane_gauntlets",
@@ -197,7 +241,9 @@
     "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 2 },
     "passiveEffects": [
       { "type": "BONUS_MANA_REGEN", "value": 1 }
-    ]
+    ],
+    "cost": 35,
+    "purchasable": true
   },
   {
     "id": "tempered_bracers",
@@ -205,7 +251,9 @@
     "description": "Hardened arm guards that provide extra protection and vitality.",
     "itemType": "GLOVES",
     "bonusStats": { "health": 1, "attack": 0, "defense": 2, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 30,
+    "purchasable": true
   },
   {
     "id": "swift_grips",
@@ -215,7 +263,9 @@
     "bonusStats": { "health": 0, "attack": 1, "defense": 0, "magic": 0 },
     "passiveEffects": [
       { "type": "BONUS_STAMINA_REGEN", "value": 2 }
-    ]
+    ],
+    "cost": 35,
+    "purchasable": true
   },
   {
     "id": "leather_boots",
@@ -223,7 +273,9 @@
     "description": "Sturdy travelling boots that also offer a little protection.",
     "itemType": "SHOES",
     "bonusStats": { "health": 1, "attack": 0, "defense": 1, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 20,
+    "purchasable": true
   },
   {
     "id": "mages_shoes",
@@ -233,7 +285,9 @@
     "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 2 },
     "passiveEffects": [
       { "type": "BONUS_MANA_REGEN", "value": 1 }
-    ]
+    ],
+    "cost": 35,
+    "purchasable": true
   },
   {
     "id": "swift_boots",
@@ -243,7 +297,9 @@
     "bonusStats": { "health": 0, "attack": 1, "defense": 0, "magic": 0 },
     "passiveEffects": [
       { "type": "BONUS_STAMINA_REGEN", "value": 1 }
-    ]
+    ],
+    "cost": 25,
+    "purchasable": true
   },
   {
     "id": "amulet_of_strength",
@@ -253,7 +309,9 @@
     "bonusStats": { "health": 0, "attack": 2, "defense": 0, "magic": 0 },
     "passiveEffects": [
       { "type": "BONUS_MAX_STAMINA", "value": 10 }
-    ]
+    ],
+    "cost": 40,
+    "purchasable": true
   },
   {
     "id": "amulet_of_magic",
@@ -263,7 +321,9 @@
     "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 2 },
     "passiveEffects": [
       { "type": "BONUS_MAX_MANA", "value": 10 }
-    ]
+    ],
+    "cost": 40,
+    "purchasable": true
   },
   {
     "id": "amulet_of_protection",
@@ -271,7 +331,9 @@
     "description": "An ancient ward in amulet form. Bolsters defence and constitution.",
     "itemType": "AMULET",
     "bonusStats": { "health": 1, "attack": 0, "defense": 2, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 30,
+    "purchasable": true
   },
   {
     "id": "berserker_pendant",
@@ -281,7 +343,9 @@
     "bonusStats": { "health": 0, "attack": 3, "defense": 0, "magic": 0 },
     "passiveEffects": [
       { "type": "BONUS_STAMINA_REGEN", "value": 2 }
-    ]
+    ],
+    "cost": 55,
+    "purchasable": true
   },
   {
     "id": "ring_of_power",
@@ -291,7 +355,9 @@
     "bonusStats": { "health": 0, "attack": 1, "defense": 0, "magic": 0 },
     "passiveEffects": [
       { "type": "BONUS_MAX_STAMINA", "value": 5 }
-    ]
+    ],
+    "cost": 25,
+    "purchasable": true
   },
   {
     "id": "ring_of_wisdom",
@@ -301,7 +367,9 @@
     "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 1 },
     "passiveEffects": [
       { "type": "BONUS_MAX_MANA", "value": 5 }
-    ]
+    ],
+    "cost": 25,
+    "purchasable": true
   },
   {
     "id": "ring_of_protection",
@@ -309,7 +377,9 @@
     "description": "A plain band infused with defensive magic.",
     "itemType": "RING",
     "bonusStats": { "health": 1, "attack": 0, "defense": 1, "magic": 0 },
-    "passiveEffects": []
+    "passiveEffects": [],
+    "cost": 20,
+    "purchasable": true
   },
   {
     "id": "ring_of_vitality",
@@ -319,6 +389,8 @@
     "bonusStats": { "health": 2, "attack": 0, "defense": 0, "magic": 0 },
     "passiveEffects": [
       { "type": "BONUS_MAX_MANA", "value": 5 }
-    ]
+    ],
+    "cost": 30,
+    "purchasable": true
   }
 ]

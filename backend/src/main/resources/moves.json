@@ -6,7 +6,7 @@
     "cost": { "costType": "stamina", "costValue": 4 },
     "statusEffects": [],
     "mainEffects": [
-      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 5, "scaling": { "stat": "attack", "multiplier": 1.0 }, "reducedBy": "defense" }
+      { "type": "damage", "target": "enemy", "resource": "health", "baseValue": 50, "scaling": { "stat": "attack", "multiplier": 1.0 }, "reducedBy": "defense" }
     ]
   },
   {

@@ -8,6 +8,7 @@ import java.util.List;
 public class CharacterDefinition {
     private String id;
     private String name;
+    private boolean startingClass;
     private CharacterStats baseStats;
     private CharacterStats statsPerLevel;
     private List<String> moves;

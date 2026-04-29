@@ -1,6 +1,6 @@
 package com.example.backend.models;
 
-import com.example.backend.utils.EncounterSlotListConverter;
+import com.example.backend.utils.EncounterNodeListConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,9 +24,9 @@ public class Run {
     @Enumerated(EnumType.STRING)
     private RunStatus status = RunStatus.ACTIVE;
 
-    private int currentEncounterIndex = 0;
+    private String currentNodeId;
 
-    @Convert(converter = EncounterSlotListConverter.class)
+    @Convert(converter = EncounterNodeListConverter.class)
     @Column(columnDefinition = "text")
-    private List<EncounterSlot> encounters = new ArrayList<>();
+    private List<EncounterNode> nodes = new ArrayList<>();
 }

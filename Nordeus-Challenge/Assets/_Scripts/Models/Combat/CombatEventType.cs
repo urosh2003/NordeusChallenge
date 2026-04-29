@@ -12,5 +12,7 @@ public enum CombatEventType
     RESOURCE_REGEN,
     RESOURCE_SPENT,
     ITEM_DROPPED,
+    GOLD_GAINED,
+    ENVIRONMENT_EFFECT,
     UNKNOWN
 }

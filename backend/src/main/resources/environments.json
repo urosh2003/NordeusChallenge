@@ -1,0 +1,42 @@
+[
+  {
+    "id": "plains",
+    "name": "Open Plains",
+    "resourceEffects": [],
+    "statEffects": { "health": 0, "attack": 0, "defense": 0, "magic": 0 }
+  },
+  {
+    "id": "lavaArena",
+    "name": "Lava Arena",
+    "resourceEffects": [
+      { "resourceType": "HEALTH", "effectType": "LOSE", "amount": 8, "isPercent": false }
+    ],
+    "statEffects": { "health": 0, "attack": 3, "defense": -2, "magic": 0 }
+  },
+  {
+    "id": "ancientForest",
+    "name": "Ancient Forest",
+    "resourceEffects": [
+      { "resourceType": "MANA",    "effectType": "GAIN", "amount": 15, "isPercent": true  },
+      { "resourceType": "STAMINA", "effectType": "GAIN", "amount": 10, "isPercent": false }
+    ],
+    "statEffects": { "health": 0, "attack": 0, "defense": 0, "magic": 2 }
+  },
+  {
+    "id": "crypt",
+    "name": "Sunken Crypt",
+    "resourceEffects": [
+      { "resourceType": "MANA",   "effectType": "LOSE", "amount": 10, "isPercent": false },
+      { "resourceType": "HEALTH", "effectType": "LOSE", "amount": 5,  "isPercent": false }
+    ],
+    "statEffects": { "health": -1, "attack": 0, "defense": 2, "magic": -1 }
+  },
+  {
+    "id": "stormPeak",
+    "name": "Storm Peak",
+    "resourceEffects": [
+      { "resourceType": "STAMINA", "effectType": "LOSE", "amount": 20, "isPercent": true }
+    ],
+    "statEffects": { "health": 0, "attack": 2, "defense": 0, "magic": 0 }
+  }
+]

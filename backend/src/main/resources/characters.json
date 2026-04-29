@@ -2,6 +2,7 @@
   {
     "id": "knight",
     "name": "Knight",
+    "startingClass": true,
     "baseStats": { "health": 10, "attack": 10, "defense": 8, "magic": 3 },
     "statsPerLevel": { "health": 2, "attack": 2, "defense": 2, "magic": 1 },
     "moves": ["slash", "shieldUp", "battleCry", "secondWind"],

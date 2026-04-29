@@ -6,11 +6,12 @@ using Newtonsoft.Json;
 
 public class RunConfig
 {
-    [JsonProperty("runId")]      public string runId;
-    [JsonProperty("encounters")] public List<RunConfigEncounter> encounters;
-    [JsonProperty("moves")]      public Dictionary<string, MoveConfig> moves;
-    [JsonProperty("items")]      public Dictionary<string, ItemDefinition> items;
-    [JsonProperty("player")]     public RunConfigPlayer player;
+    [JsonProperty("runId")]        public string runId;
+    [JsonProperty("encounters")]   public List<RunConfigEncounter> encounters;
+    [JsonProperty("moves")]        public Dictionary<string, MoveConfig> moves;
+    [JsonProperty("items")]        public Dictionary<string, ItemDefinition> items;
+    [JsonProperty("player")]       public RunConfigPlayer player;
+    [JsonProperty("environments")] public Dictionary<string, EnvironmentDefinition> environments;
 
     // ── Lookup helpers ────────────────────────────────────────────────────────
 
@@ -22,4 +23,7 @@ public class RunConfig
 
     public RunConfigEncounter GetEncounter(int index) =>
         encounters?.Find(e => e.index == index);
+
+    public EnvironmentDefinition GetEnvironment(string id) =>
+        id != null && environments != null && environments.TryGetValue(id, out var e) ? e : null;
 }

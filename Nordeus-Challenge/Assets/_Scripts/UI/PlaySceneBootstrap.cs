@@ -2,32 +2,67 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Runs once when the Play scene loads.
-/// Verifies the GameManager has a valid run (guards against loading the
-/// Play scene directly in the editor without going through Main Menu),
-/// then opens the map overlay so the player can pick an encounter.
+/// Manages panel switching between the map overlay and the combat view.
+/// Attach to any persistent object in the Play scene.
+///
+/// Flow:
+///   OnCombatUpdated fires (StartNodeCombat response arrives) → ShowCombat()
+///   OnCombatEnded fires (fight is over)                      → ShowMap()
 /// </summary>
 public class PlaySceneBootstrap : MonoBehaviour
 {
+    public static PlaySceneBootstrap Instance { get; private set; }
+
     [Header("Panels")]
-    public GameObject mapPanel;     // the overlay Canvas / panel — starts hidden
-    public GameObject combatPanel;  // shown when a combat is active
+    public GameObject mapPanel;
+    public GameObject combatPanel;
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
         if (GameManager.Instance == null || GameManager.Instance.CurrentRun == null)
         {
-            // Launched the Play scene directly without going through Main Menu.
-            // In editor this is common; in a build it shouldn't happen.
             Debug.LogWarning("[PlayScene] No active run — returning to Main Menu.");
             SceneManager.LoadScene("MainMenu");
             return;
         }
 
-        ShowMap();
+        if (GameManager.Instance.IsCombatActive)
+            ShowCombat();
+        else
+            ShowMap();
     }
 
-    // ── Panel helpers ─────────────────────────────────────────────────────────
+    void OnEnable()
+    {
+        GameManager.OnCombatUpdated           += HandleCombatUpdated;
+        CombatEventProcessor.OnCombatEnded    += HandleCombatEnded;
+    }
+
+    void OnDisable()
+    {
+        GameManager.OnCombatUpdated           -= HandleCombatUpdated;
+        CombatEventProcessor.OnCombatEnded    -= HandleCombatEnded;
+    }
+
+    // ── Panel switching ───────────────────────────────────────────────────────
+
+    // Empty events list = combat just started (StartNodeCombat response).
+    // Mid-combat responses (player move, enemy turn) always have events, so ignore those.
+    private void HandleCombatUpdated(CombatResponse r)
+    {
+        if (r.events == null || r.events.Count == 0)
+            ShowCombat();
+    }
+
+    // Combat ended — return to map so the player can pick the next node.
+    private void HandleCombatEnded(CombatEvent _) => ShowMap();
+
+    // ── Public helpers (call from buttons if needed) ──────────────────────────
 
     public void ShowMap()
     {
@@ -41,8 +76,5 @@ public class PlaySceneBootstrap : MonoBehaviour
         if (combatPanel) combatPanel.SetActive(true);
     }
 
-    public void ReturnToMainMenu()
-    {
-        SceneManager.LoadScene("MainMenu");
-    }
+    public void ReturnToMainMenu() => SceneManager.LoadScene("MainMenu");
 }

@@ -1,6 +1,7 @@
 package com.example.backend.dtos.responces;
 
 import com.example.backend.combat.MoveDefinition;
+import com.example.backend.models.EnvironmentDefinition;
 import com.example.backend.models.ItemDefinition;
 
 import java.util.List;
@@ -12,5 +13,6 @@ public record RunConfigResponse(
         List<EncounterConfig> encounters,
         Map<String, MoveDefinition> moves,
         Map<String, ItemDefinition> items,
-        PlayerRunConfig player
+        PlayerRunConfig player,
+        Map<String, EnvironmentDefinition> environments
 ) {}

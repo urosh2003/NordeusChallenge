@@ -1,11 +1,15 @@
 package com.example.backend.dtos.responces;
 
 import com.example.backend.models.CharacterStats;
+import com.example.backend.models.EncounterType;
 
 import java.util.List;
 
 public record EncounterConfig(
-        int index,
+        String nodeId,
+        int row,
+        int column,
+        EncounterType type,
         String enemyDefinitionId,
         String enemyName,
         int enemyLevel,
@@ -17,5 +21,6 @@ public record EncounterConfig(
         int enemyStaminaPerTurn,
         List<String> enemyMoves,
         List<String> possibleDrops,
-        int completions
+        int completions,
+        List<String> nextNodeIds
 ) {}

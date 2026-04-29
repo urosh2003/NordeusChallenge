@@ -19,13 +19,12 @@ public class MainMenuManager : MonoBehaviour
 
     // ── Button callbacks ──────────────────────────────────────────────────────
 
-    public void OnStartNewRun()
+    public void OnStartNewRun(string classId = "knight")
     {
         SetLoading(true);
-        GameManager.Instance.CreateRun(
+        GameManager.Instance.CreateRun(classId,
             run =>
             {
-                // Fetch config then enter the Play scene.
                 GameManager.Instance.GetRunConfig(
                     _ => SceneManager.LoadScene("PlayScene"),
                     err => OnError(err));
@@ -40,7 +39,21 @@ public class MainMenuManager : MonoBehaviour
             run =>
             {
                 GameManager.Instance.GetRunConfig(
-                    _ => SceneManager.LoadScene("PlayScene"),
+                    _ =>
+                    {
+                        if (!string.IsNullOrEmpty(run.activeCombatId))
+                        {
+                            // Restore in-progress combat before entering the play scene
+                            // so PlaySceneBootstrap can show the combat panel directly.
+                            GameManager.Instance.LoadActiveCombat(run.activeCombatId,
+                                _ => SceneManager.LoadScene("PlayScene"),
+                                err => OnError(err));
+                        }
+                        else
+                        {
+                            SceneManager.LoadScene("PlayScene");
+                        }
+                    },
                     err => OnError(err));
             },
             err => OnError(err));

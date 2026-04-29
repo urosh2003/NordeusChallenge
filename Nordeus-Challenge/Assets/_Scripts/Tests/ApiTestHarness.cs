@@ -8,13 +8,13 @@ using UnityEngine;
 ///
 /// Typical test flow:
 ///   1. CreateRun
-///   2. GetRunConfig         (fetch move/item definitions — call once per run)
-///   3. StartCombat          (uses encounterIndex field below)
-///   3. PlayerMove_Slash  ┐
-///   4. EnemyTurn         ┘ repeat until COMBAT_ENDED appears in the event log
-///   5. ContinueRun          (advance past the cleared encounter)
-///   6. GetPlayerState       (verify XP / level / item rewards)
-///   7. SpendLevelUpPoints   (if a LEVEL_UP event fired — check HasPendingLevelUp)
+///   2. GetRunConfig              (fetch move/item definitions — call once per run)
+///   3. EnterCurrentNode          (dispatches to /start or /enter based on node type)
+///   4. PlayerMove_Slash  ┐
+///   5. EnemyTurn         ┘ repeat until COMBAT_ENDED (combat nodes only)
+///   6. EnterNextNode             (pick first eligible next node and enter it)
+///   7. GetPlayerState            (verify XP / level / gold / item rewards)
+///   8. SpendLevelUpPoints        (if a LEVEL_UP event fired — check HasPendingLevelUp)
 ///
 /// Use LogLocalState at any point to compare CombatManager's event-driven
 /// state against the authoritative state logged by the combat calls.
@@ -22,8 +22,8 @@ using UnityEngine;
 public class ApiTestHarness : MonoBehaviour
 {
     [Header("Config")]
-    [Tooltip("Which encounter to start when clicking StartCombat (0 = first).")]
-    public int encounterIndex = 0;
+    [Tooltip("Override node ID for StartNodeCombat. Leave empty to use the current node.")]
+    public string overrideNodeId = "";
 
     [Header("SpendLevelUpPoints — must sum to 3, all >= 0")]
     public int levelUpHealth  = 1;
@@ -33,14 +33,6 @@ public class ApiTestHarness : MonoBehaviour
 
     // ── Run ───────────────────────────────────────────────────────────────────
 
-    public void CreateRun()
-    {
-        Log("CreateRun", "sending…");
-        GameManager.Instance.CreateRun(
-            run => LogRun("CreateRun", run),
-            err => LogError("CreateRun", err));
-    }
-
     public void GetRunConfig()
     {
         Log("GetRunConfig", "sending…");
@@ -49,20 +41,39 @@ public class ApiTestHarness : MonoBehaviour
             err => LogError("GetRunConfig", err));
     }
 
-    public void StartCombat()
+    public void EnterCurrentNode()
     {
-        Log("StartCombat", $"encounter {encounterIndex}…");
-        GameManager.Instance.StartCombat(encounterIndex,
-            combat => LogCombat("StartCombat", combat),
-            err    => LogError("StartCombat", err));
+        var run  = GameManager.Instance.CurrentRun;
+        var node = run?.CurrentNode;
+        if (node == null) { LogError("EnterCurrentNode", "No current node — create a run first."); return; }
+        EnterNode("EnterCurrentNode", node);
     }
 
-    public void ContinueRun()
+    public void EnterNextNode()
     {
-        Log("ContinueRun", "sending…");
-        GameManager.Instance.ContinueRun(
-            run => LogRun("ContinueRun", run),
-            err => LogError("ContinueRun", err));
+        var run     = GameManager.Instance.CurrentRun;
+        var current = run?.CurrentNode;
+        if (current == null || !current.IsCleared) { LogError("EnterNextNode", "Current node is not cleared."); return; }
+
+        var nextId = current.nextNodeIds?.Count > 0 ? current.nextNodeIds[0] : null;
+        if (nextId == null) { LogError("EnterNextNode", "No next node available."); return; }
+
+        var node = run.GetNode(nextId);
+        if (node == null) { LogError("EnterNextNode", $"Node {nextId} not found in run."); return; }
+        EnterNode("EnterNextNode", node);
+    }
+
+    private void EnterNode(string label, RunNode node)
+    {
+        Log(label, $"node {node.id} ({node.type})…");
+        if (node.IsCombat)
+            GameManager.Instance.StartNodeCombat(node.id,
+                combat => LogCombat(label, combat),
+                err    => LogError(label, err));
+        else
+            GameManager.Instance.EnterNode(node.id,
+                r   => { LogRun(label, r.run); LogPlayer(label, r.player); },
+                err => LogError(label, err));
     }
 
     // ── Combat ────────────────────────────────────────────────────────────────
@@ -187,13 +198,13 @@ public class ApiTestHarness : MonoBehaviour
     {
         var sb = new StringBuilder();
         sb.AppendLine($"[TEST] {label} OK");
-        sb.AppendLine($"  runId:   {run.runId}");
-        sb.AppendLine($"  status:  {run.Status}  (raw:\"{run.status}\")");
-        sb.AppendLine($"  current: encounter {run.currentEncounterIndex}");
-        sb.AppendLine($"  cleared: {run.IsCompleted}");
-        if (run.encounters != null)
-            foreach (var enc in run.encounters)
-                sb.AppendLine($"    [{enc.index}] {enc.enemyName} lv{enc.enemyLevel}  completions:{enc.completions}  cleared:{enc.IsCleared}");
+        sb.AppendLine($"  runId:       {run.runId}");
+        sb.AppendLine($"  status:      {run.Status}  (raw:\"{run.status}\")");
+        sb.AppendLine($"  currentNode: {run.currentNodeId}");
+        sb.AppendLine($"  nodes ({run.nodes?.Count ?? 0}):");
+        if (run.nodes != null)
+            foreach (var n in run.nodes)
+                sb.AppendLine($"    row{n.row} col{n.column}  [{n.type}]  id:{n.id}  {n.enemyDefinitionId} lv{n.enemyLevel}  cleared:{n.IsCleared}  next:[{string.Join(",", n.nextNodeIds ?? new List<string>())}]");
         Debug.Log(sb.ToString());
     }
 
@@ -238,8 +249,9 @@ public class ApiTestHarness : MonoBehaviour
 
     private static void AppendPlayerState(StringBuilder sb, string prefix, PlayerStateResponse p)
     {
-        sb.AppendLine($"{prefix}{p.characterName} (id:{p.id})  lv{p.level}");
+        sb.AppendLine($"{prefix}{p.characterName} (id:{p.id})  lv{p.level}  gold:{p.gold}");
         sb.AppendLine($"{prefix}XP       {p.currentXp} / {p.xpToNextLevel}  ({p.XpProgress:P0})");
+        sb.AppendLine($"{prefix}HP       {p.currentHp}  Mana {p.currentMana}  Stamina {p.currentStamina}");
         sb.AppendLine($"{prefix}Pending  {p.pendingStatPoints} stat points  (hasLevelUp:{p.HasPendingLevelUp})");
         sb.AppendLine($"{prefix}Stats    ATK:{p.stats?.attack}  DEF:{p.stats?.defense}  MAG:{p.stats?.magic}  HP:{p.stats?.health}");
         sb.AppendLine($"{prefix}Known    [{string.Join(", ", p.knownMoves    ?? new List<string>())}]");

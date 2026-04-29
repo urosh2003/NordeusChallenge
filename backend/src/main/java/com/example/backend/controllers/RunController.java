@@ -1,8 +1,7 @@
 package com.example.backend.controllers;
 
-import com.example.backend.dtos.responces.CombatResponse;
-import com.example.backend.dtos.responces.RunConfigResponse;
-import com.example.backend.dtos.responces.RunResponse;
+import com.example.backend.dtos.requests.CreateRunRequest;
+import com.example.backend.dtos.responces.*;
 import com.example.backend.services.RunService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,47 +19,50 @@ public class RunController {
         this.runService = runService;
     }
 
-    /** Start a new run — generates the 5-encounter map. */
     @PostMapping
-    public ResponseEntity<RunResponse> createRun() {
-        return ResponseEntity.status(HttpStatus.CREATED).body(runService.createRun());
+    public ResponseEntity<RunResponse> createRun(@RequestBody CreateRunRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(runService.createRun(request.classId()));
     }
 
-    /** Get the current run state (map overview). */
     @GetMapping("/{runId}")
     public ResponseEntity<RunResponse> getRun(@PathVariable UUID runId) {
         return ResponseEntity.ok(runService.getRun(runId));
     }
 
-    /**
-     * Full static configuration for this run — call once when the run starts.
-     * Returns all 5 enemy definitions (with computed stats and movesets), full
-     * move definitions for every move that can appear, full item definitions for
-     * every possible drop and every item the player currently owns, and the
-     * player's current loadout (equipped moves, inventory, equipment).
-     */
     @GetMapping("/{runId}/config")
     public ResponseEntity<RunConfigResponse> getRunConfig(@PathVariable UUID runId) {
         return ResponseEntity.ok(runService.getRunConfig(runId));
     }
 
-    /**
-     * Start (or replay) the combat for encounter at the given index.
-     * Returns a CombatResponse — use the combatId for subsequent combat actions.
-     */
-    @PostMapping("/{runId}/encounters/{index}/start")
+    /** Start combat for a COMBAT or BOSS node. */
+    @PostMapping("/{runId}/nodes/{nodeId}/start")
     public ResponseEntity<CombatResponse> startCombat(
             @PathVariable UUID runId,
-            @PathVariable int index) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(runService.startCombat(runId, index));
+            @PathVariable String nodeId) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(runService.startCombat(runId, nodeId));
     }
 
-    /**
-     * After winning the current encounter, advance to the next one on the map.
-     * Call this when the player chooses "Continue" instead of "Replay".
-     */
-    @PostMapping("/{runId}/continue")
-    public ResponseEntity<RunResponse> continueRun(@PathVariable UUID runId) {
-        return ResponseEntity.ok(runService.continueRun(runId));
+    /** Enter a SHOP or REST_SITE node (auto-heals on REST, generates offers on SHOP). */
+    @PostMapping("/{runId}/nodes/{nodeId}/enter")
+    public ResponseEntity<NodeEnterResponse> enterNode(
+            @PathVariable UUID runId,
+            @PathVariable String nodeId) {
+        return ResponseEntity.ok(runService.enterNode(runId, nodeId));
+    }
+
+    /** Buy an offer from the current shop node. */
+    @PostMapping("/{runId}/shop/buy/{offerId}")
+    public ResponseEntity<PlayerStateResponse> buyOffer(
+            @PathVariable UUID runId,
+            @PathVariable String offerId) {
+        return ResponseEntity.ok(runService.buyOffer(runId, offerId));
+    }
+
+    /** Sell an inventory item at the current shop. */
+    @PostMapping("/{runId}/shop/sell/{itemId}")
+    public ResponseEntity<PlayerStateResponse> sellItem(
+            @PathVariable UUID runId,
+            @PathVariable String itemId) {
+        return ResponseEntity.ok(runService.sellItem(runId, itemId));
     }
 }

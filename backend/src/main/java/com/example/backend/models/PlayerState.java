@@ -23,13 +23,22 @@ public class PlayerState {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(unique = true)
+    private UUID runId;
+
     private String characterDefinitionId;
     private String characterName;
 
     private int level = 1;
     private int currentXp = 0;
+    private int gold = 0;
 
     private int pendingStatPoints = 0;
+
+    /** Persistent HP between combats. 0 = "use max" (e.g. fresh player). */
+    private int currentHp = 0;
+    private int currentMana = 0;
+    private int currentStamina = 0;
 
     @Convert(converter = CharacterStatsConverter.class)
     @Column(columnDefinition = "text")

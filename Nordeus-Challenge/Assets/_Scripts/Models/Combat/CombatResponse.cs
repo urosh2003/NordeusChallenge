@@ -8,4 +8,6 @@ public class CombatResponse
     public List<CombatEvent> events;
     public CombatState state;
     public PlayerStateResponse playerState;
+    public string currentTurn;    // "PLAYER" or "ENEMY" while active; null when combat ended
+    public string environmentId;  // which environment this combat takes place in
 }

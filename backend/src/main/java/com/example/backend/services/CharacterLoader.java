@@ -35,6 +35,12 @@ public class CharacterLoader {
         return def;
     }
 
+    public List<CharacterDefinition> getStartingClasses() {
+        return definitions.values().stream()
+                .filter(CharacterDefinition::isStartingClass)
+                .collect(Collectors.toList());
+    }
+
     public Character createCharacter(String instanceId, String definitionId, int level) {
         CharacterDefinition def = definitions.get(definitionId);
         if (def == null) throw new IllegalArgumentException("Unknown character definition: " + definitionId);

@@ -6,4 +6,4 @@ import com.example.backend.models.CombatState;
 import java.util.List;
 import java.util.UUID;
 
-public record CombatResponse(UUID combatId, List<CombatEvent> events, CombatState state, PlayerStateResponse playerState) {}
+public record CombatResponse(UUID combatId, List<CombatEvent> events, CombatState state, PlayerStateResponse playerState, String currentTurn, String environmentId) {}

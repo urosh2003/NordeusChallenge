@@ -22,7 +22,7 @@ public class CombatController {
     @PostMapping
     public ResponseEntity<CombatResponse> createCombat() {
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                combatSessionService.createCombat("witch", 1, null, 0));
+                combatSessionService.createCombat("witch", 1, null, null, null));
     }
 
     @PostMapping("/{combatId}/actions")

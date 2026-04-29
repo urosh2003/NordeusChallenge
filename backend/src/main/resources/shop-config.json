@@ -1,0 +1,13 @@
+{
+  "statOfferCount": 2,
+  "itemOfferCount": 3,
+  "statAmountMin": 1,
+  "statAmountMax": 3,
+  "statCostPerPoint": 50,
+  "sellPricePercent": 40,
+  "encounterTypeWeights": {
+    "COMBAT": 60,
+    "SHOP": 20,
+    "REST_SITE": 20
+  }
+}

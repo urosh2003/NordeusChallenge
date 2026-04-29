@@ -20,7 +20,7 @@ public class Equipment {
 
     public List<String> getAllEquipped() {
         return Stream.of(mainHand, offHand, armor, gloves, shoes, amulet, ring)
-                .filter(id -> id != null)
+                .filter(id -> id != null && !id.isEmpty())
                 .collect(Collectors.toList());
     }
 }
