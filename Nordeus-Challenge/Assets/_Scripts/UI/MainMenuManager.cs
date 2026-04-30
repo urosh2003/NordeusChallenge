@@ -4,6 +4,8 @@ using UnityEngine.SceneManagement;
 
 public class MainMenuManager : MonoBehaviour
 {
+    public static MainMenuManager Instance { get; private set; }
+
     [Header("Buttons")]
     public Button startNewRunButton;
     public Button continueRunButton;
@@ -11,15 +13,27 @@ public class MainMenuManager : MonoBehaviour
     [Header("Loading indicator (optional)")]
     public GameObject loadingOverlay;
 
+    void Awake()
+    {
+        if (Instance != null) { Destroy(gameObject); return; }
+        Instance = this;
+    }
+
     void Start()
     {
-        // Continue is only available when a run ID is saved in PlayerPrefs.
         continueRunButton.interactable = GameManager.HasSavedRun;
     }
 
     // ── Button callbacks ──────────────────────────────────────────────────────
 
-    public void OnStartNewRun(string classId = "knight")
+    /// Called from the "New Run" button — opens class selection instead of starting directly.
+    public void OnNewRunButtonClicked()
+    {
+        ClassSelectionPanel.Instance?.Open();
+    }
+
+    /// Called by ClassSelectionPanel after the player confirms a class.
+    public void OnStartNewRun(string classId)
     {
         SetLoading(true);
         GameManager.Instance.CreateRun(classId,
@@ -51,7 +65,10 @@ public class MainMenuManager : MonoBehaviour
                         }
                         else
                         {
-                            SceneManager.LoadScene("PlayScene");
+                            // No active combat — fetch player state so resource bars are correct on load.
+                            GameManager.Instance.GetPlayerState(
+                                _ => SceneManager.LoadScene("PlayScene"),
+                                err => OnError(err));
                         }
                     },
                     err => OnError(err));

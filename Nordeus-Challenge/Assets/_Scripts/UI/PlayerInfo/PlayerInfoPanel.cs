@@ -81,7 +81,11 @@ public class PlayerInfoPanel : MonoBehaviour
         if (confirmButton) confirmButton.gameObject.SetActive(editable);
         if (cancelButton)  cancelButton.gameObject.SetActive(editable);
 
-        Refresh();
+        RefreshEquipmentSlots();
+        RefreshInventoryGrid();
+        // Open resets any in-progress stat allocation
+        if (statsPanel != null)
+            statsPanel.Open(ps.stats, _pendingEquip, GameManager.Instance.CurrentRunConfig, ps.pendingStatPoints);
     }
 
     public void Close()
@@ -96,7 +100,12 @@ public class PlayerInfoPanel : MonoBehaviour
     {
         if (!IsEditable) return;
         GameManager.Instance.SetEquipment(_pendingEquip,
-            _ => Close(),
+            ps =>
+            {
+                _pendingEquip     = ps.equipment.Clone();
+                _pendingInventory = new List<string>(ps.inventory);
+                Refresh();
+            },
             err => Debug.LogError($"[PlayerInfoPanel] SetEquipment failed: {err}"));
     }
 
@@ -160,16 +169,16 @@ public class PlayerInfoPanel : MonoBehaviour
     private void RefreshEquipmentSlots()
     {
         var cfg = GameManager.Instance.CurrentRunConfig;
-        void R(EquipmentSlotUI ui, string id) =>
-            ui?.Refresh(id, string.IsNullOrEmpty(id) ? null : cfg?.GetItem(id));
+        void R(EquipmentSlotUI ui, EquipmentSlot slot, string id) =>
+            ui?.Refresh(slot, id, string.IsNullOrEmpty(id) ? null : cfg?.GetItem(id));
 
-        R(mainHandSlot, _pendingEquip.mainHand);
-        R(offHandSlot,  _pendingEquip.offHand);
-        R(armorSlot,    _pendingEquip.armor);
-        R(glovesSlot,   _pendingEquip.gloves);
-        R(shoesSlot,    _pendingEquip.shoes);
-        R(amuletSlot,   _pendingEquip.amulet);
-        R(ringSlot,     _pendingEquip.ring);
+        R(mainHandSlot, EquipmentSlot.MAIN_HAND, _pendingEquip.mainHand);
+        R(offHandSlot,  EquipmentSlot.OFF_HAND,  _pendingEquip.offHand);
+        R(armorSlot,    EquipmentSlot.ARMOR,      _pendingEquip.armor);
+        R(glovesSlot,   EquipmentSlot.GLOVES,     _pendingEquip.gloves);
+        R(shoesSlot,    EquipmentSlot.SHOES,      _pendingEquip.shoes);
+        R(amuletSlot,   EquipmentSlot.AMULET,     _pendingEquip.amulet);
+        R(ringSlot,     EquipmentSlot.RING,        _pendingEquip.ring);
     }
 
     private void RefreshInventoryGrid()
@@ -188,9 +197,8 @@ public class PlayerInfoPanel : MonoBehaviour
 
     private void RefreshStats()
     {
-        var ps = GameManager.Instance.PlayerState;
-        if (ps == null || statsPanel == null) return;
-        statsPanel.Refresh(ps.stats, _pendingEquip, GameManager.Instance.CurrentRunConfig);
+        if (statsPanel == null) return;
+        statsPanel.UpdateEquipmentBonuses(_pendingEquip, GameManager.Instance.CurrentRunConfig);
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────

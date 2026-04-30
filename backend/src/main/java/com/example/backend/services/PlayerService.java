@@ -2,6 +2,7 @@ package com.example.backend.services;
 
 import com.example.backend.combat.CombatEvent;
 import com.example.backend.combat.CombatEventType;
+import com.example.backend.dtos.responces.PlayerStateResponse;
 import com.example.backend.models.*;
 import com.example.backend.repositories.PlayerStateRepository;
 import org.springframework.stereotype.Service;
@@ -135,6 +136,12 @@ public class PlayerService {
         character.setBonusManaRegen(bonusManaRegen);
         character.setBonusStaminaRegen(bonusStaminaRegen);
         return character;
+    }
+
+    /** Build a PlayerStateResponse that includes correct max HP/mana/stamina computed from equipment. */
+    public PlayerStateResponse buildPlayerStateResponse(PlayerState ps) {
+        Character character = buildCombatCharacter(ps);
+        return PlayerStateResponse.from(ps, character.getMaxHp(), character.getMaxMana(), character.getMaxStamina());
     }
 
     public PlayerState equipMoves(UUID runId, List<String> moveIds) {

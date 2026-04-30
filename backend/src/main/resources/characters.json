@@ -11,6 +11,7 @@
   {
     "id": "witch",
     "name": "Witch",
+    "startingClass": true,
     "baseStats": { "health": 7, "attack": 4, "defense": 3, "magic": 10 },
     "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 3 },
     "moves": ["shadowBolt", "drainLife", "curse", "darkPact"],

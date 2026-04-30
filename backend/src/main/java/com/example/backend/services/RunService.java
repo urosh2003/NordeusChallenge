@@ -155,7 +155,7 @@ public class RunService {
         playerService.saveState(ps);
         runRepo.save(run);
 
-        return new NodeEnterResponse(RunResponse.from(run), PlayerStateResponse.from(ps));
+        return new NodeEnterResponse(RunResponse.from(run), playerService.buildPlayerStateResponse(ps));
     }
 
     /**
@@ -200,7 +200,7 @@ public class RunService {
         playerService.saveState(ps);
         runRepo.save(run);
 
-        return PlayerStateResponse.from(ps);
+        return playerService.buildPlayerStateResponse(ps);
     }
 
     /**
@@ -224,7 +224,7 @@ public class RunService {
         ps.setGold(ps.getGold() + sellPrice);
 
         playerService.saveState(ps);
-        return PlayerStateResponse.from(ps);
+        return playerService.buildPlayerStateResponse(ps);
     }
 
     @Transactional(readOnly = true)
@@ -274,6 +274,7 @@ public class RunService {
         allMoveIds.addAll(playerState.getKnownMoves());
         allItemIds.addAll(playerState.getInventory());
         allItemIds.addAll(playerState.getEquipment().getAllEquipped());
+        allItemIds.addAll(itemRegistry.getAll().keySet());
 
         Map<String, MoveDefinition> moves = allMoveIds.stream()
                 .collect(Collectors.toMap(id -> id, moveRegistry::getDefinition,

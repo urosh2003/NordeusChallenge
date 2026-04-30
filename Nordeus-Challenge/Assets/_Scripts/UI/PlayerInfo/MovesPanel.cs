@@ -73,7 +73,16 @@ public class MovesPanel : MonoBehaviour
             return;
         }
         GameManager.Instance.EquipMoves(new List<string>(_pendingEquipped),
-            _ => Close(),
+            ps =>
+            {
+                _pendingEquipped = new string[4];
+                for (int i = 0; i < 4 && i < ps.equippedMoves.Count; i++)
+                    _pendingEquipped[i] = ps.equippedMoves[i];
+                _pendingKnown = ps.knownMoves
+                    .Where(id => !System.Array.Exists(_pendingEquipped, e => e == id))
+                    .ToList();
+                Refresh();
+            },
             err => Debug.LogError($"[MovesPanel] EquipMoves failed: {err}"));
     }
 

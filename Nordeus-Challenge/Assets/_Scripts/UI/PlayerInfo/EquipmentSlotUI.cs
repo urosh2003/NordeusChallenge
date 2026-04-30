@@ -18,24 +18,25 @@ public class EquipmentSlotUI : MonoBehaviour,
     IBeginDragHandler, IDragHandler, IEndDragHandler,
     IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
-    [Header("Slot type")]
-    public EquipmentSlot slot;
-
     [Header("References")]
-    [SerializeField] Image          icon;
-    [SerializeField] GameObject     emptyOverlay;
-    [SerializeField] CanvasGroup    canvasGroup;
+    [SerializeField] Image           icon;
+    [SerializeField] GameObject      emptyOverlay;
+    [SerializeField] CanvasGroup     canvasGroup;
     [SerializeField] TextMeshProUGUI slotLabel;
 
+    private EquipmentSlot  _slot;
     private string         _itemId;
     private ItemDefinition _itemDef;
 
     // ── Setup ─────────────────────────────────────────────────────────────────
 
-    public void Refresh(string itemId, ItemDefinition def)
+    public void Refresh(EquipmentSlot slot, string itemId, ItemDefinition def)
     {
+        _slot    = slot;
         _itemId  = itemId;
         _itemDef = def;
+
+        if (slotLabel) slotLabel.text = SlotDisplayName(slot);
 
         bool filled = !string.IsNullOrEmpty(itemId);
         if (emptyOverlay) emptyOverlay.SetActive(!filled);
@@ -76,7 +77,7 @@ public class EquipmentSlotUI : MonoBehaviour,
         string dragged = DragDropManager.Instance.DraggedItemId;
         DragDropManager.Instance.NotifyDropHandled();
         DragDropManager.Instance.EndDrag();  // hide ghost before Refresh destroys the source item
-        PlayerInfoPanel.Instance.TryMoveToSlot(dragged, slot);
+        PlayerInfoPanel.Instance.TryMoveToSlot(dragged, _slot);
     }
 
     // ── Tooltip ───────────────────────────────────────────────────────────────
@@ -106,4 +107,16 @@ public class EquipmentSlotUI : MonoBehaviour,
     }
 
     private static string Signed(int v) => v >= 0 ? $"+{v}" : $"{v}";
+
+    private static string SlotDisplayName(EquipmentSlot s) => s switch
+    {
+        EquipmentSlot.MAIN_HAND => "Main Hand",
+        EquipmentSlot.OFF_HAND  => "Off Hand",
+        EquipmentSlot.ARMOR     => "Armor",
+        EquipmentSlot.GLOVES    => "Gloves",
+        EquipmentSlot.SHOES     => "Shoes",
+        EquipmentSlot.AMULET    => "Amulet",
+        EquipmentSlot.RING      => "Ring",
+        _                       => s.ToString()
+    };
 }

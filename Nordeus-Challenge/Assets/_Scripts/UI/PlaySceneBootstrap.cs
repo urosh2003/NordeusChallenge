@@ -3,11 +3,11 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Manages panel switching between the map overlay and the combat view.
-/// Attach to any persistent object in the Play scene.
 ///
 /// Flow:
-///   OnCombatUpdated fires (StartNodeCombat response arrives) → ShowCombat()
-///   OnCombatEnded fires (fight is over)                      → ShowMap()
+///   OnCombatUpdated (empty events)  → ShowCombat()
+///   OnCombatEnded event fires       → sets _combatEnded flag
+///   OnAllEventsProcessed            → if _combatEnded: ShowMap(); else auto-trigger enemy turn
 /// </summary>
 public class PlaySceneBootstrap : MonoBehaviour
 {
@@ -16,6 +16,8 @@ public class PlaySceneBootstrap : MonoBehaviour
     [Header("Panels")]
     public GameObject mapPanel;
     public GameObject combatPanel;
+
+    private bool _combatEnded;
 
     void Awake()
     {
@@ -34,35 +36,54 @@ public class PlaySceneBootstrap : MonoBehaviour
         if (GameManager.Instance.IsCombatActive)
             ShowCombat();
         else
+        {
             ShowMap();
+            GameManager.Instance.GetPlayerState();
+        }
     }
 
     void OnEnable()
     {
-        GameManager.OnCombatUpdated           += HandleCombatUpdated;
-        CombatEventProcessor.OnCombatEnded    += HandleCombatEnded;
+        GameManager.OnCombatUpdated               += HandleCombatUpdated;
+        CombatEventProcessor.OnCombatEnded        += HandleCombatEndedEvent;
+        CombatEventProcessor.OnAllEventsProcessed += HandleAllEventsProcessed;
     }
 
     void OnDisable()
     {
-        GameManager.OnCombatUpdated           -= HandleCombatUpdated;
-        CombatEventProcessor.OnCombatEnded    -= HandleCombatEnded;
+        GameManager.OnCombatUpdated               -= HandleCombatUpdated;
+        CombatEventProcessor.OnCombatEnded        -= HandleCombatEndedEvent;
+        CombatEventProcessor.OnAllEventsProcessed -= HandleAllEventsProcessed;
     }
 
-    // ── Panel switching ───────────────────────────────────────────────────────
+    // ── Event handlers ────────────────────────────────────────────────────────
 
-    // Empty events list = combat just started (StartNodeCombat response).
-    // Mid-combat responses (player move, enemy turn) always have events, so ignore those.
+    // Empty events = combat just started. Mid-combat responses always have events.
     private void HandleCombatUpdated(CombatResponse r)
     {
         if (r.events == null || r.events.Count == 0)
             ShowCombat();
     }
 
-    // Combat ended — return to map so the player can pick the next node.
-    private void HandleCombatEnded(CombatEvent _) => ShowMap();
+    // Flag only — transition happens after the full queue drains so XP / gold /
+    // item drop / move learnt events all play out while still on the combat panel.
+    private void HandleCombatEndedEvent(CombatEvent _) => _combatEnded = true;
 
-    // ── Public helpers (call from buttons if needed) ──────────────────────────
+    private void HandleAllEventsProcessed(CombatState state, PlayerStateResponse player)
+    {
+        if (_combatEnded)
+        {
+            _combatEnded = false;
+            ShowMap();
+            return;
+        }
+
+        // Auto-trigger enemy turn — player never needs to press a button.
+        if (GameManager.Instance.IsCombatActive && !GameManager.Instance.IsPlayerTurn)
+            GameManager.Instance.TriggerEnemyTurn();
+    }
+
+    // ── Public helpers ────────────────────────────────────────────────────────
 
     public void ShowMap()
     {

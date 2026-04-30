@@ -13,6 +13,9 @@ public class PlayerStateResponse
     public int    currentHp;             // 0 = full HP (fresh player)
     public int    currentMana;
     public int    currentStamina;
+    public int    maxHp;
+    public int    maxMana;
+    public int    maxStamina;
     public CharacterStats   stats;
     public List<string>     knownMoves;    // all moves ever learned
     public List<string>     equippedMoves; // the 4 moves for the next combat

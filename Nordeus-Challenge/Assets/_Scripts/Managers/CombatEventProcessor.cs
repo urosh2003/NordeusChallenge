@@ -108,6 +108,11 @@ public class CombatEventProcessor : MonoBehaviour
     /// True while the queue is draining. Use to block player move input.
     public bool IsProcessing { get; private set; }
 
+    /// Pause queue draining until Resume() is called (e.g. while a reward popup is open).
+    public void Pause()  => _paused = true;
+    public void Resume() => _paused = false;
+
+    private bool                 _paused;
     private readonly Queue<CombatEvent> _queue       = new();
     private CombatState         _pendingFinalState;
     private PlayerStateResponse _pendingPlayerState;
@@ -149,6 +154,7 @@ public class CombatEventProcessor : MonoBehaviour
             var e = _queue.Dequeue();
             Dispatch(e);
             yield return new WaitForSeconds(secondsBetweenEvents);
+            while (_paused) yield return null;
         }
 
         IsProcessing = false;

@@ -144,7 +144,7 @@ public class GameManager : MonoBehaviour
     {
         if (!EnsureRun(onError)) return;
         StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/nodes/{nodeId}/start", null,
-            json => { var r = JsonUtility.FromJson<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
+            json => { var r = JsonConvert.DeserializeObject<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
             err  => HandleError(err, onError)));
     }
 
@@ -159,7 +159,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/nodes/{nodeId}/enter", null,
             json =>
             {
-                var r = JsonUtility.FromJson<EnterNodeResponse>(json);
+                var r = JsonConvert.DeserializeObject<EnterNodeResponse>(json);
                 ApplyRun(r.run);
                 if (r.player != null) ApplyPlayer(r.player);
                 OnNodeEntered?.Invoke(r);
@@ -181,7 +181,7 @@ public class GameManager : MonoBehaviour
         if (!EnsureCombat(onError)) return;
         var body = JsonUtility.ToJson(new MoveRequest(moveId));
         StartCoroutine(HttpHelpers.Post($"{baseUrl}/combats/{CurrentCombatId}/actions", body,
-            json => { var r = JsonUtility.FromJson<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
+            json => { var r = JsonConvert.DeserializeObject<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
             err  => HandleError(err, onError)));
     }
 
@@ -193,7 +193,7 @@ public class GameManager : MonoBehaviour
     {
         if (!EnsureCombat(onError)) return;
         StartCoroutine(HttpHelpers.Get($"{baseUrl}/combats/{CurrentCombatId}/enemy-turn",
-            json => { var r = JsonUtility.FromJson<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
+            json => { var r = JsonConvert.DeserializeObject<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
             err  => HandleError(err, onError)));
     }
 
@@ -203,7 +203,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void LoadActiveCombat(string combatId, Action<CombatResponse> onSuccess = null, Action<string> onError = null)
         => StartCoroutine(HttpHelpers.Get($"{baseUrl}/combats/{combatId}",
-            json => { var r = JsonUtility.FromJson<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
+            json => { var r = JsonConvert.DeserializeObject<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
             err  => HandleError(err, onError)));
 
     // =========================================================================
@@ -215,7 +215,7 @@ public class GameManager : MonoBehaviour
     {
         if (!EnsureRun(onError)) return;
         StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/shop/buy/{offerId}", null,
-            json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
+            json => { var p = JsonConvert.DeserializeObject<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
             err  => HandleError(err, onError)));
     }
 
@@ -224,7 +224,7 @@ public class GameManager : MonoBehaviour
     {
         if (!EnsureRun(onError)) return;
         StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/shop/sell/{itemId}", null,
-            json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
+            json => { var p = JsonConvert.DeserializeObject<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
             err  => HandleError(err, onError)));
     }
 
@@ -237,7 +237,7 @@ public class GameManager : MonoBehaviour
     {
         if (!EnsureRun(onError)) return;
         StartCoroutine(HttpHelpers.Get($"{baseUrl}/runs/{CurrentRun.runId}/player",
-            json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
+            json => { var p = JsonConvert.DeserializeObject<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
             err  => HandleError(err, onError)));
     }
 
@@ -250,7 +250,7 @@ public class GameManager : MonoBehaviour
         if (!EnsureRun(onError)) return;
         var body = JsonUtility.ToJson(new EquipMovesRequest(moveIds));
         StartCoroutine(HttpHelpers.Put($"{baseUrl}/runs/{CurrentRun.runId}/player/moves", body,
-            json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
+            json => { var p = JsonConvert.DeserializeObject<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
             err  => HandleError(err, onError)));
     }
 
@@ -265,7 +265,7 @@ public class GameManager : MonoBehaviour
         if (!EnsureRun(onError)) return;
         var body = JsonConvert.SerializeObject(new EquipEquipmentRequest(equipment));
         StartCoroutine(HttpHelpers.Put($"{baseUrl}/runs/{CurrentRun.runId}/player/equipment", body,
-            json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
+            json => { var p = JsonConvert.DeserializeObject<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
             err  => HandleError(err, onError)));
     }
 
@@ -283,7 +283,7 @@ public class GameManager : MonoBehaviour
 
         var body = JsonUtility.ToJson(req);
         StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/player/level-up", body,
-            json => { var p = JsonUtility.FromJson<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
+            json => { var p = JsonConvert.DeserializeObject<PlayerStateResponse>(json); ApplyPlayer(p); onSuccess?.Invoke(p); },
             err  => HandleError(err, onError)));
     }
 

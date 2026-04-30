@@ -52,6 +52,7 @@ public class CombatManager : MonoBehaviour
         CombatEventProcessor.OnStatusEffectApplied   += HandleStatusEffect;
         CombatEventProcessor.OnResourceRegen         += HandleResourceRegen;
         CombatEventProcessor.OnResourceSpent         += HandleResourceSpent;
+        CombatEventProcessor.OnEnvironmentEffect     += HandleEnvironmentEffect;
         CombatEventProcessor.OnAllEventsProcessed    += HandleHardSync;
     }
 
@@ -63,6 +64,7 @@ public class CombatManager : MonoBehaviour
         CombatEventProcessor.OnStatusEffectApplied   -= HandleStatusEffect;
         CombatEventProcessor.OnResourceRegen         -= HandleResourceRegen;
         CombatEventProcessor.OnResourceSpent         -= HandleResourceSpent;
+        CombatEventProcessor.OnEnvironmentEffect     -= HandleEnvironmentEffect;
         CombatEventProcessor.OnAllEventsProcessed    -= HandleHardSync;
     }
 
@@ -159,6 +161,27 @@ public class CombatManager : MonoBehaviour
 
         target.currentMana    = Mathf.Min(target.maxMana,    target.currentMana    + e.manaGained);
         target.currentStamina = Mathf.Min(target.maxStamina, target.currentStamina + e.staminaGained);
+        NotifyChanged(target);
+    }
+
+    private void HandleEnvironmentEffect(CombatEvent e)
+    {
+        var target = ResolveCharacter(e.targetId);
+        if (target == null) return;
+
+        // e.amount is already sign-aware from the backend (negative for LOSE, positive for GAIN)
+        switch (e.resourceType)
+        {
+            case "HEALTH":
+                target.currentHp      = Mathf.Clamp(target.currentHp      + e.amount, 0, target.maxHp);
+                break;
+            case "MANA":
+                target.currentMana    = Mathf.Clamp(target.currentMana    + e.amount, 0, target.maxMana);
+                break;
+            case "STAMINA":
+                target.currentStamina = Mathf.Clamp(target.currentStamina + e.amount, 0, target.maxStamina);
+                break;
+        }
         NotifyChanged(target);
     }
 

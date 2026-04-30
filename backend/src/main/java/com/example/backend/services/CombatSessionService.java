@@ -78,7 +78,7 @@ public class CombatSessionService {
         combat.setEnvironmentId(environmentId);
 
         combat = repo.save(combat);
-        return new CombatResponse(combat.getId(), List.of(), state, PlayerStateResponse.from(playerState),
+        return new CombatResponse(combat.getId(), List.of(), state, playerService.buildPlayerStateResponse(playerState),
                 Turn.PLAYER.name(), environmentId);
     }
 
@@ -102,7 +102,7 @@ public class CombatSessionService {
         state.appendHistory(events);
 
         PlayerState playerState = playerService.getOrCreatePlayerState(combat.getRunId());
-        PlayerStateResponse playerStateResponse = PlayerStateResponse.from(playerState);
+        PlayerStateResponse playerStateResponse = playerService.buildPlayerStateResponse(playerState);
 
         if (enemy.getCurrentHp() <= 0) {
             events.add(CombatEvent.of(CombatEventType.COMBAT_ENDED).with("winnerId", player.getId()));
@@ -111,7 +111,7 @@ public class CombatSessionService {
             List<CombatEvent> rewardEvents = playerService.processVictory(
                     playerState, combat.getEnemyLevel(), enemy.getMoves(), combat.getEnemyDefinitionId(), player);
             events.addAll(rewardEvents);
-            playerStateResponse = PlayerStateResponse.from(playerState);
+            playerStateResponse = playerService.buildPlayerStateResponse(playerState);
 
             if (combat.getRunId() != null) {
                 runRepo.findById(combat.getRunId()).ifPresent(run -> {
@@ -203,7 +203,7 @@ public class CombatSessionService {
         combat.setState(state);
         repo.save(combat);
         String currentTurn = combat.getStatus() == CombatStatus.ACTIVE ? combat.getCurrentTurn().name() : null;
-        return new CombatResponse(combat.getId(), events, state, PlayerStateResponse.from(playerState),
+        return new CombatResponse(combat.getId(), events, state, playerService.buildPlayerStateResponse(playerState),
                 currentTurn, combat.getEnvironmentId());
     }
 
@@ -289,6 +289,6 @@ public class CombatSessionService {
         PlayerState playerState = playerService.getOrCreatePlayerState(combat.getRunId());
         String currentTurn = combat.getStatus() == CombatStatus.ACTIVE ? combat.getCurrentTurn().name() : null;
         return new CombatResponse(combat.getId(), List.of(), combat.getState(),
-                PlayerStateResponse.from(playerState), currentTurn, combat.getEnvironmentId());
+                playerService.buildPlayerStateResponse(playerState), currentTurn, combat.getEnvironmentId());
     }
 }

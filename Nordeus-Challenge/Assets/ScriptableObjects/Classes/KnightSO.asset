@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce74eeefde5f43c47ad2b6589af6bfca, type: 3}
+  m_Name: KnightSO
+  m_EditorClassIdentifier: 
+  classId: knight
+  className: Knight
+  description: A sturdy warrior clad in iron
+  portrait: {fileID: -172783271, guid: 317efbac861843e498f58ba4a5b26899, type: 3}
+  baseHealth: 10
+  baseAttack: 10
+  baseDefense: 8
+  baseMagic: 3
+  startingMoveNames:
+  - Slash
+  - Shield Up
+  - Battle Cry
+  - Second Wind

@@ -1,5 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class PlayerHUD : MonoBehaviour
@@ -25,6 +25,7 @@ public class PlayerHUD : MonoBehaviour
 
     void Build(PlayerStateResponse playerState)
     {
+        if (_equippedMoves != null && _equippedMoves.SequenceEqual(playerState.equippedMoves)) return;
         Clear();
         
         _equippedMoves = playerState.equippedMoves;

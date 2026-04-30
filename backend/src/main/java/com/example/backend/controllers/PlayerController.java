@@ -27,7 +27,7 @@ public class PlayerController {
 
     @GetMapping
     public ResponseEntity<PlayerStateResponse> getPlayer(@PathVariable UUID runId) {
-        return ResponseEntity.ok(PlayerStateResponse.from(playerService.getOrCreatePlayerState(runId)));
+        return ResponseEntity.ok(playerService.buildPlayerStateResponse(playerService.getOrCreatePlayerState(runId)));
     }
 
     @PutMapping("/moves")
@@ -37,14 +37,14 @@ public class PlayerController {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("Cannot change equipped moves during an active combat");
         }
-        return ResponseEntity.ok(PlayerStateResponse.from(playerService.equipMoves(runId, request.moveIds())));
+        return ResponseEntity.ok(playerService.buildPlayerStateResponse(playerService.equipMoves(runId, request.moveIds())));
     }
 
     @PostMapping("/level-up")
     public ResponseEntity<PlayerStateResponse> distributeStatPoints(
             @PathVariable UUID runId,
             @RequestBody StatDistributionRequest request) {
-        return ResponseEntity.ok(PlayerStateResponse.from(
+        return ResponseEntity.ok(playerService.buildPlayerStateResponse(
                 playerService.distributeStatPoints(runId, request.health(), request.attack(),
                         request.defense(), request.magic())));
     }
@@ -64,6 +64,6 @@ public class PlayerController {
         incoming.setShoes(request.shoes());
         incoming.setAmulet(request.amulet());
         incoming.setRing(request.ring());
-        return ResponseEntity.ok(PlayerStateResponse.from(playerService.setEquipment(runId, incoming)));
+        return ResponseEntity.ok(playerService.buildPlayerStateResponse(playerService.setEquipment(runId, incoming)));
     }
 }

@@ -22,7 +22,10 @@ public record PlayerStateResponse(
         int gold,
         int currentHp,
         int currentMana,
-        int currentStamina
+        int currentStamina,
+        int maxHp,
+        int maxMana,
+        int maxStamina
 ) {
     public static PlayerStateResponse from(PlayerState ps) {
         return new PlayerStateResponse(
@@ -40,7 +43,29 @@ public record PlayerStateResponse(
                 ps.getGold(),
                 ps.getCurrentHp(),
                 ps.getCurrentMana(),
-                ps.getCurrentStamina()
+                ps.getCurrentStamina(),
+                0, 0, 0
+        );
+    }
+
+    public static PlayerStateResponse from(PlayerState ps, int maxHp, int maxMana, int maxStamina) {
+        return new PlayerStateResponse(
+                ps.getId(),
+                ps.getCharacterName(),
+                ps.getLevel(),
+                ps.getCurrentXp(),
+                ps.getXpToNextLevel(),
+                ps.getStats(),
+                ps.getKnownMoves(),
+                ps.getEquippedMoves(),
+                ps.getPendingStatPoints(),
+                ps.getInventory(),
+                ps.getEquipment(),
+                ps.getGold(),
+                ps.getCurrentHp(),
+                ps.getCurrentMana(),
+                ps.getCurrentStamina(),
+                maxHp, maxMana, maxStamina
         );
     }
 }

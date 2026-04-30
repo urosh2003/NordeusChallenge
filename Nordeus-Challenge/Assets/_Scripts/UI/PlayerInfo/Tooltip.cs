@@ -15,6 +15,7 @@ public class Tooltip : MonoBehaviour
     {
         if (Instance != null) { Destroy(gameObject); return; }
         Instance = this;
+
         panel.gameObject.SetActive(false);
     }
 
