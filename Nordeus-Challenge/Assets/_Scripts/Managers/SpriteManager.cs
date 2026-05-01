@@ -9,6 +9,7 @@ public class SpriteManager : MonoBehaviour
     [SerializeField] List<MoveSO>        movesSOs;
     [SerializeField] List<EnvironmentSO> environmentSOs;
     [SerializeField] List<ClassSO>       classSOs;
+    [SerializeField] List<ItemSO>        itemSOs;
 
     void Awake()
     {
@@ -23,7 +24,9 @@ public class SpriteManager : MonoBehaviour
     public MoveSO        GetMoveSOById(string id)         => movesSOs?.Find(so => so.moveId             == id);
     public EnvironmentSO GetEnvironmentSO(string id)      => environmentSOs?.Find(so => so.environmentId == id);
     public ClassSO       GetClassSO(string id)            => classSOs?.Find(so => so.classId            == id);
+    public ItemSO        GetItemSOById(string id)         => itemSOs?.Find(so => so.itemId              == id);
     public List<ClassSO> GetAllClasses()                  => classSOs ?? new List<ClassSO>();
+    public Sprite        GetItemIcon(string id)           => GetItemSOById(id)?.icon;
 
     // ── Current combat convenience ────────────────────────────────────────────
 

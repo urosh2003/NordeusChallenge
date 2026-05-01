@@ -111,6 +111,7 @@ public class ShopPanel : MonoBehaviour
             player =>
             {
                 offer.purchased = true;
+                
                 RefreshOfferButtons(player.gold);
                 BuildInventory(player);
             },
@@ -136,7 +137,7 @@ public class ShopPanel : MonoBehaviour
     private void RefreshOfferButtons(int playerGold)
     {
         foreach (var go in _spawnedOffers)
-            go.GetComponent<ShopOfferCard>()?.RefreshGold(playerGold);
+            go.GetComponent<ShopOfferCard>()?.RefreshCard(playerGold);
     }
 
     private void SetStatus(string msg)

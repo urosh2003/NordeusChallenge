@@ -8,13 +8,6 @@ using UnityEngine;
 /// one at a time so the UI can animate each step (damage flash, HP bar tween, etc.)
 /// instead of snapping straight to the final server state.
 ///
-/// How to use
-/// ──────────
-/// 1. Attach this component to the same persistent GameObject as GameManager.
-/// 2. In your combat UI scripts, subscribe to the per-event static events below.
-///    Do NOT subscribe to GameManager.OnCombatUpdated for per-frame visual changes —
-///    let the processor drive visuals, and use OnAllEventsProcessed for a final sync.
-/// 3. Use IsProcessing to block player input while the queue is draining.
 ///
 /// Typical combat UI subscriptions
 /// ────────────────────────────────

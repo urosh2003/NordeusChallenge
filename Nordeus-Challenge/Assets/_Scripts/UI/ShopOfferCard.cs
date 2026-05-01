@@ -10,6 +10,7 @@ using UnityEngine.UI;
 /// </summary>
 public class ShopOfferCard : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
+    [SerializeField] Image           icon;
     [SerializeField] TextMeshProUGUI nameLabel;
     [SerializeField] TextMeshProUGUI typeLabel;
     [SerializeField] TextMeshProUGUI costLabel;
@@ -33,6 +34,13 @@ public class ShopOfferCard : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
             ? (GameManager.Instance.CurrentRunConfig?.GetItem(offer.itemId)?.itemType ?? "Item")
             : "Stat Upgrade";
 
+        if (icon)
+        {
+            Sprite sprite = isItem ? SpriteManager.Instance?.GetItemIcon(offer.itemId) : null;
+            icon.sprite  = sprite;
+            icon.enabled = sprite != null;
+        }
+
         if (nameLabel)    nameLabel.text = displayName;
         if (typeLabel)    typeLabel.text = displayType;
         if (costLabel)    costLabel.text = $"{offer.cost}g";
@@ -48,7 +56,7 @@ public class ShopOfferCard : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
         if (purchasedOverlay) purchasedOverlay.SetActive(offer.purchased);
     }
 
-    public void RefreshGold(int playerGold)
+    public void RefreshCard(int playerGold)
     {
         if (buyButton && !_offer.purchased)
             buyButton.interactable = playerGold >= _offer.cost;
@@ -75,12 +83,19 @@ public class ShopOfferCard : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
 
     public void OnPointerExit(PointerEventData _) => Tooltip.Instance?.Hide();
 
+    public void OnSold()
+    {
+        if (purchasedOverlay) purchasedOverlay.SetActive(_offer.purchased);
+    }
+
     // ── Private ───────────────────────────────────────────────────────────────
 
     private void OnBuyClicked()
     {
         if (buyButton) buyButton.interactable = false;
         _onBuy?.Invoke(_offer);
+        if (purchasedOverlay) purchasedOverlay.SetActive(true);
+
     }
 
     private static string Cap(string s)    => string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s.Substring(1).ToLower();

@@ -10,6 +10,7 @@ using UnityEngine.UI;
 /// </summary>
 public class SellItemCard : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
+    [SerializeField] Image           icon;
     [SerializeField] TextMeshProUGUI nameLabel;
     [SerializeField] TextMeshProUGUI typeLabel;
     [SerializeField] Button          sellButton;
@@ -25,6 +26,13 @@ public class SellItemCard : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         var def = GameManager.Instance.CurrentRunConfig?.GetItem(itemId);
         if (nameLabel) nameLabel.text = def?.name ?? itemId;
         if (typeLabel) typeLabel.text = def?.itemType ?? string.Empty;
+
+        if (icon)
+        {
+            Sprite sprite = SpriteManager.Instance?.GetItemIcon(itemId);
+            icon.sprite  = sprite;
+            icon.enabled = sprite != null;
+        }
 
         sellButton?.onClick.RemoveAllListeners();
         sellButton?.onClick.AddListener(OnSellClicked);
