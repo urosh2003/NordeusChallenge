@@ -16,7 +16,7 @@ public class StatDistributionRequest
         this.magic   = magic;
     }
 
-    // Must sum to exactly 3 — validate before sending
-    public bool IsValid => health + attack + defense + magic == 3
+    // Must sum to at least 1, no negatives — server validates upper bound
+    public bool IsValid => health + attack + defense + magic >= 1
                         && health >= 0 && attack >= 0 && defense >= 0 && magic >= 0;
 }

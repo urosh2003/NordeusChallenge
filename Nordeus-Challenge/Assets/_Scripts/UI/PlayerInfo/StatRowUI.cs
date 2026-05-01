@@ -28,17 +28,28 @@ public class StatRowUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
         };
 
     public void Setup(string statName, int baseValue, int equipBonus, int allocated,
-                      bool canAdd, bool canRemove, Action onPlus, Action onMinus)
+                      bool canAdd, bool canRemove, Action onPlus, Action onMinus, bool disableChange = false)
     {
         _statName   = statName;
         _base       = baseValue;
 
         if (label) label.text = $"{statName}:";
 
-        plusButton?.onClick.RemoveAllListeners();
-        plusButton?.onClick.AddListener(() => onPlus?.Invoke());
-        minusButton?.onClick.RemoveAllListeners();
-        minusButton?.onClick.AddListener(() => onMinus?.Invoke());
+        if (disableChange)
+        {
+            plusButton?.gameObject.SetActive(false);
+            minusButton?.gameObject.SetActive(false);
+        }
+        else
+        {
+            plusButton?.gameObject.SetActive(true);
+            minusButton?.gameObject.SetActive(true);
+            plusButton?.onClick.RemoveAllListeners();
+            plusButton?.onClick.AddListener(() => onPlus?.Invoke());
+            minusButton?.onClick.RemoveAllListeners();
+            minusButton?.onClick.AddListener(() => onMinus?.Invoke());
+        }
+        
 
         UpdateDisplay(allocated, equipBonus, canAdd, canRemove);
     }

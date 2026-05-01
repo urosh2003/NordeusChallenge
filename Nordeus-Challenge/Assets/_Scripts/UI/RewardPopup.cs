@@ -36,12 +36,14 @@ public class RewardPopup : MonoBehaviour
         // Awake (not OnEnable) so the subscription works even while inactive.
         CombatEventProcessor.OnMoveLearnt  += HandleMoveLearnt;
         CombatEventProcessor.OnItemDropped += HandleItemDropped;
+        CombatEventProcessor.OnLevelUp     += HandleLevelUp;
     }
 
     void OnDestroy()
     {
         CombatEventProcessor.OnMoveLearnt  -= HandleMoveLearnt;
         CombatEventProcessor.OnItemDropped -= HandleItemDropped;
+        CombatEventProcessor.OnLevelUp     -= HandleLevelUp;
     }
 
     // ── Event handlers ────────────────────────────────────────────────────────
@@ -51,6 +53,12 @@ public class RewardPopup : MonoBehaviour
         var cfg  = GameManager.Instance.CurrentRunConfig;
         var move = cfg?.GetMove(e.moveId);
         Enqueue("Move Learned!", move?.name ?? e.moveId, BuildMoveDesc(move));
+    }
+
+    private void HandleLevelUp(CombatEvent e)
+    {
+        string pts = e.pendingStatPoints == 1 ? "1 stat point" : $"{e.pendingStatPoints} stat points";
+        Enqueue("Level Up!", $"You are now level {e.newLevel}.", $"{pts} to spend — open your stats to allocate.");
     }
 
     private void HandleItemDropped(CombatEvent e)

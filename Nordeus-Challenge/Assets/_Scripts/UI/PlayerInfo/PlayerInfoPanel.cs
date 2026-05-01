@@ -85,12 +85,16 @@ public class PlayerInfoPanel : MonoBehaviour
         RefreshInventoryGrid();
         // Open resets any in-progress stat allocation
         if (statsPanel != null)
+        {
+            statsPanel.gameObject.SetActive(true);
             statsPanel.Open(ps.stats, _pendingEquip, GameManager.Instance.CurrentRunConfig, ps.pendingStatPoints);
+        }
     }
 
     public void Close()
     {
         Tooltip.Instance?.Hide();
+        statsPanel?.Close();
         gameObject.SetActive(false);
     }
 

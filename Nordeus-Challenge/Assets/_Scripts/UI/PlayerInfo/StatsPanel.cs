@@ -26,31 +26,45 @@ public class StatsPanel : MonoBehaviour
     [SerializeField] Button              confirmStatsButton;
     [SerializeField] TextMeshProUGUI     pendingPointsLabel;
 
-    private const int PointsPerLevel = 3;
-
     private CharacterStats   _baseStats;
     private readonly int[]   _equipBonus  = new int[4]; // health, attack, defense, magic
     private readonly int[]   _allocated   = new int[4];
     private int              _serverPendingPoints;
 
+    private bool _enableChanges;
+
     private readonly List<GameObject> _rows = new();
 
     private static readonly string[] StatNames  = { "Health", "Attack", "Defense", "Magic" };
 
-    private int AllocatedTotal      => _allocated[0] + _allocated[1] + _allocated[2] + _allocated[3];
-    private int PointsLeftInBatch   => Mathf.Min(_serverPendingPoints, PointsPerLevel) - AllocatedTotal;
-    private bool HasPendingLevel    => _serverPendingPoints >= PointsPerLevel;
+    private int AllocatedTotal    => _allocated[0] + _allocated[1] + _allocated[2] + _allocated[3];
+    private int PointsRemaining   => _serverPendingPoints - AllocatedTotal;
+    private bool HasPendingPoints => _serverPendingPoints > 0;
 
     // ── Public API ────────────────────────────────────────────────────────────
 
-    /// Full reset — call when the player info panel opens.
-    public void Open(CharacterStats baseStats, Equipment pendingEquip, RunConfig config, int pendingStatPoints)
+    /// Open standalone — reads current authoritative state directly from GameManager.
+    /// Wire a HUD button to this.
+    public void OpenStandalone()
     {
+        var ps     = GameManager.Instance.PlayerState;
+        var config = GameManager.Instance.CurrentRunConfig;
+        if (ps == null) return;
+        gameObject.SetActive(true);
+        Open(ps.stats, ps.equipment.Clone(), config, ps.pendingStatPoints, true);
+    }
+
+    public void Close() => gameObject.SetActive(false);
+
+    /// Full reset — call when the player info panel opens.
+    public void Open(CharacterStats baseStats, Equipment pendingEquip, RunConfig config, int pendingStatPoints, bool enableChanges=false)
+    {
+        _enableChanges       = enableChanges;
         _baseStats           = baseStats;
         _serverPendingPoints = pendingStatPoints;
         System.Array.Clear(_allocated, 0, 4);
         ComputeEquipBonus(pendingEquip, config);
-        RebuildRows();
+        RebuildRows(_enableChanges);
         RefreshConfirmButton();
         UpdatePendingLabel();
     }
@@ -66,7 +80,7 @@ public class StatsPanel : MonoBehaviour
 
     public void OnConfirmStats()
     {
-        if (AllocatedTotal != PointsPerLevel) return;
+        if (AllocatedTotal <= 0) return;
         GameManager.Instance.SpendLevelUpPoints(
             _allocated[0], _allocated[1], _allocated[2], _allocated[3],
             ps =>
@@ -74,7 +88,7 @@ public class StatsPanel : MonoBehaviour
                 _serverPendingPoints = ps.pendingStatPoints;
                 _baseStats           = ps.stats;
                 System.Array.Clear(_allocated, 0, 4);
-                RefreshAllRows();
+                RebuildRows(_enableChanges);
                 RefreshConfirmButton();
                 UpdatePendingLabel();
             },
@@ -85,7 +99,7 @@ public class StatsPanel : MonoBehaviour
 
     private void OnPlus(int idx)
     {
-        if (PointsLeftInBatch <= 0) return;
+        if (PointsRemaining <= 0) return;
         _allocated[idx]++;
         RefreshAllRows();
         RefreshConfirmButton();
@@ -101,7 +115,7 @@ public class StatsPanel : MonoBehaviour
         UpdatePendingLabel();
     }
 
-    private void RebuildRows()
+    private void RebuildRows(bool enableChanges)
     {
         foreach (var r in _rows) Destroy(r);
         _rows.Clear();
@@ -114,10 +128,11 @@ public class StatsPanel : MonoBehaviour
             var go  = Instantiate(statRowPrefab, container);
             var row = go.GetComponent<StatRowUI>();
             row?.Setup(StatNames[i], baseValues[i], _equipBonus[i], _allocated[i],
-                canAdd:    HasPendingLevel && PointsLeftInBatch > 0,
-                canRemove: _allocated[i] > 0,
-                onPlus:    () => OnPlus(idx),
-                onMinus:   () => OnMinus(idx));
+                canAdd:        HasPendingPoints && PointsRemaining > 0,
+                canRemove:     _allocated[i] > 0,
+                onPlus:        () => OnPlus(idx),
+                onMinus:       () => OnMinus(idx),
+                disableChange: !enableChanges);
             _rows.Add(go);
         }
     }
@@ -130,7 +145,7 @@ public class StatsPanel : MonoBehaviour
         {
             var row = _rows[i].GetComponent<StatRowUI>();
             row?.UpdateDisplay(_allocated[i], _equipBonus[i],
-                canAdd:    HasPendingLevel && PointsLeftInBatch > 0,
+                canAdd:    HasPendingPoints && PointsRemaining > 0,
                 canRemove: _allocated[i] > 0);
         }
     }
@@ -152,21 +167,21 @@ public class StatsPanel : MonoBehaviour
     private void RefreshConfirmButton()
     {
         if (!confirmStatsButton) return;
-        confirmStatsButton.gameObject.SetActive(HasPendingLevel);
-        confirmStatsButton.interactable = AllocatedTotal == PointsPerLevel;
+        confirmStatsButton.gameObject.SetActive(HasPendingPoints);
+        confirmStatsButton.interactable = AllocatedTotal > 0;
     }
 
     private void UpdatePendingLabel()
     {
         if (!pendingPointsLabel) return;
-        int left = PointsLeftInBatch;
-        if (!HasPendingLevel)
+        if (!HasPendingPoints)
         {
             pendingPointsLabel.text = string.Empty;
             return;
         }
-        pendingPointsLabel.text = left > 0
-            ? $"{left} point{(left == 1 ? "" : "s")} left to allocate"
+        int remaining = PointsRemaining;
+        pendingPointsLabel.text = remaining > 0
+            ? $"{remaining} point{(remaining == 1 ? "" : "s")} remaining"
             : "Ready to confirm";
     }
 }

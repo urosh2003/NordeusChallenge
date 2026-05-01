@@ -279,7 +279,7 @@ public class GameManager : MonoBehaviour
     {
         if (!EnsureRun(onError)) return;
         var req = new StatDistributionRequest(health, attack, defense, magic);
-        if (!req.IsValid) { HandleError("Stat points must sum to exactly 3 with no negatives.", onError); return; }
+        if (!req.IsValid) { HandleError("Must allocate at least 1 stat point with no negatives.", onError); return; }
 
         var body = JsonUtility.ToJson(req);
         StartCoroutine(HttpHelpers.Post($"{baseUrl}/runs/{CurrentRun.runId}/player/level-up", body,
@@ -324,10 +324,10 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        OnCombatUpdated?.Invoke(response);
+
         if (response.playerState != null)
             ApplyPlayer(response.playerState);
-
-        OnCombatUpdated?.Invoke(response);
     }
 
     private void ApplyPlayer(PlayerStateResponse player)

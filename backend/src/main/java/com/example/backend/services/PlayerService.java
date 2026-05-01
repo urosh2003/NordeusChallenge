@@ -212,21 +212,21 @@ public class PlayerService {
 
     public PlayerState distributeStatPoints(UUID runId, int health, int attack, int defense, int magic) {
         int total = health + attack + defense + magic;
-        if (total != POINTS_PER_LEVEL)
-            throw new IllegalArgumentException(
-                    "Must distribute exactly " + POINTS_PER_LEVEL + " points, got " + total);
+        if (total < 1)
+            throw new IllegalArgumentException("Must distribute at least 1 stat point");
         if (health < 0 || attack < 0 || defense < 0 || magic < 0)
             throw new IllegalArgumentException("Stat points cannot be negative");
 
         PlayerState ps = getOrCreatePlayerState(runId);
-        if (ps.getPendingStatPoints() < POINTS_PER_LEVEL)
-            throw new IllegalStateException("No pending stat points to distribute");
+        if (ps.getPendingStatPoints() < total)
+            throw new IllegalStateException(
+                    "Not enough pending stat points: have " + ps.getPendingStatPoints() + ", requested " + total);
 
         ps.getStats().updateHealth(health);
         ps.getStats().updateAttack(attack);
         ps.getStats().updateDefense(defense);
         ps.getStats().updateMagic(magic);
-        ps.setPendingStatPoints(ps.getPendingStatPoints() - POINTS_PER_LEVEL);
+        ps.setPendingStatPoints(ps.getPendingStatPoints() - total);
         return repository.save(ps);
     }
 
