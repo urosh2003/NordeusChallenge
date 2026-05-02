@@ -14,8 +14,9 @@ public class Character
     public int currentStamina;
     public int maxStamina;
     public int staminaPerTurn;
-    public CharacterStats stats;
-    public List<string> moves;   // equipped move IDs for this combat
+    public CharacterStats      stats;
+    public List<string>        moves;           // equipped move IDs for this combat
+    public List<ActiveEffectInfo> activeEffects; // current in-combat buffs/debuffs
 }
 
 [Serializable]

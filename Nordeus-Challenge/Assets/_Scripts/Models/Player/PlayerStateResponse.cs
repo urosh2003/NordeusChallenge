@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class PlayerStateResponse
 {
     public string id;
+    public string characterId;
     public string characterName;
     public int    level;
     public int    currentXp;

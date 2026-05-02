@@ -8,5 +8,6 @@ public record PlayerRunConfig(
         List<String> knownMoves,
         List<String> equippedMoves,
         List<String> inventory,
-        Equipment equipment
+        Equipment equipment,
+        String characterId
 ) {}

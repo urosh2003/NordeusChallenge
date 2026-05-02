@@ -23,7 +23,7 @@ public class MoveDefinition {
     @Data
     public static class StatusEffectDef {
         private TargetType target;
-        private StatType type;
+        private EffectType type;
         private int value;
         private int duration;
     }
@@ -44,9 +44,10 @@ public class MoveDefinition {
         private double multiplier = 1.0;
     }
 
-    public enum CostType { none, mana, health, stamina }
-    public enum TargetType { self, enemy }
-    public enum StatType { attack, defense, magic }
+    public enum CostType       { none, mana, health, stamina }
+    public enum TargetType     { self, enemy }
+    public enum StatType       { attack, defense, magic }
+    public enum EffectType     { attack, defense, magic, bleed, poison }
     public enum MainEffectType { damage, heal, steal }
-    public enum ResourceType { health, mana }
+    public enum ResourceType   { health, mana }
 }

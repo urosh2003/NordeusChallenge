@@ -26,7 +26,7 @@ public class PlayerState {
     @Column(unique = true)
     private UUID runId;
 
-    private String characterDefinitionId;
+    private String characterId;
     private String characterName;
 
     private int level = 1;

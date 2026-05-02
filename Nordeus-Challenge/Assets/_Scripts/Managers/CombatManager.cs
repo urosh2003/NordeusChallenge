@@ -50,6 +50,7 @@ public class CombatManager : MonoBehaviour
         CombatEventProcessor.OnDamageDealt           += HandleDamage;
         CombatEventProcessor.OnHealReceived          += HandleHeal;
         CombatEventProcessor.OnStatusEffectApplied   += HandleStatusEffect;
+        CombatEventProcessor.OnStatusEffectExpired   += HandleStatusEffectExpired;
         CombatEventProcessor.OnResourceRegen         += HandleResourceRegen;
         CombatEventProcessor.OnResourceSpent         += HandleResourceSpent;
         CombatEventProcessor.OnEnvironmentEffect     += HandleEnvironmentEffect;
@@ -62,6 +63,7 @@ public class CombatManager : MonoBehaviour
         CombatEventProcessor.OnDamageDealt           -= HandleDamage;
         CombatEventProcessor.OnHealReceived          -= HandleHeal;
         CombatEventProcessor.OnStatusEffectApplied   -= HandleStatusEffect;
+        CombatEventProcessor.OnStatusEffectExpired   -= HandleStatusEffectExpired;
         CombatEventProcessor.OnResourceRegen         -= HandleResourceRegen;
         CombatEventProcessor.OnResourceSpent         -= HandleResourceSpent;
         CombatEventProcessor.OnEnvironmentEffect     -= HandleEnvironmentEffect;
@@ -133,6 +135,21 @@ public class CombatManager : MonoBehaviour
             case "attack":  target.stats.attack  += e.value; break;
             case "defense": target.stats.defense += e.value; break;
             case "magic":   target.stats.magic   += e.value; break;
+        }
+        NotifyChanged(target);
+    }
+
+    // Reverts the stat change when an effect expires.
+    private void HandleStatusEffectExpired(CombatEvent e)
+    {
+        var target = ResolveCharacter(e.targetId);
+        if (target == null) return;
+
+        switch (e.statType)
+        {
+            case "attack":  target.stats.attack  -= e.value; break;
+            case "defense": target.stats.defense -= e.value; break;
+            case "magic":   target.stats.magic   -= e.value; break;
         }
         NotifyChanged(target);
     }

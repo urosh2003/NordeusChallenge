@@ -25,4 +25,6 @@ public class DefenseStatus extends IStatusEffect {
     public void unapply(Character character) {
         character.getStats().updateDefense(-value);
     }
+
+    @Override public String getStatType() { return "defense"; }
 }

@@ -52,6 +52,9 @@ public class CombatEventProcessor : MonoBehaviour
     /// Fired when a stat buff/debuff is applied.
     public static event Action<CombatEvent> OnStatusEffectApplied;
 
+    /// Fired when a status effect expires and its stat change is reverted.
+    public static event Action<CombatEvent> OnStatusEffectExpired;
+
     /// Fired when the turn switches. Enable/disable move buttons based on event.newTurn.
     public static event Action<CombatEvent> OnTurnChanged;
 
@@ -166,7 +169,8 @@ public class CombatEventProcessor : MonoBehaviour
             case CombatEventType.MOVE_USED:             OnMoveUsed?.Invoke(e);             break;
             case CombatEventType.DAMAGE_DEALT:          OnDamageDealt?.Invoke(e);          break;
             case CombatEventType.HEAL_RECEIVED:         OnHealReceived?.Invoke(e);         break;
-            case CombatEventType.STATUS_EFFECT_APPLIED: OnStatusEffectApplied?.Invoke(e);  break;
+            case CombatEventType.STATUS_EFFECT_APPLIED:  OnStatusEffectApplied?.Invoke(e);  break;
+            case CombatEventType.STATUS_EFFECT_EXPIRED:  OnStatusEffectExpired?.Invoke(e);  break;
             case CombatEventType.TURN_CHANGED:          OnTurnChanged?.Invoke(e);          break;
             case CombatEventType.COMBAT_ENDED:          OnCombatEnded?.Invoke(e);          break;
             case CombatEventType.XP_GAINED:             OnXpGained?.Invoke(e);             break;

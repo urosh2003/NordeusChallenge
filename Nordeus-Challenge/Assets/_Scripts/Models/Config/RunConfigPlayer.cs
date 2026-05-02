@@ -8,4 +8,5 @@ public class RunConfigPlayer
     public List<string> equippedMoves;
     public List<string> inventory;
     public Equipment equipment;
+    public string characterId;
 }

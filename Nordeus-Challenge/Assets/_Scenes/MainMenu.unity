@@ -1376,6 +1376,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 187d0e80950ec3d4c8efa16fce06b27a, type: 2}
   environmentSOs: []
   classSOs: []
+  itemSOs: []
+  attackPositive: {fileID: 21300000, guid: a320013e63289ee47829b26ba2807445, type: 3}
+  attackNegative: {fileID: 21300000, guid: e8e71322a5cf0054085272760cbfa07a, type: 3}
+  defensePositive: {fileID: 21300000, guid: a56901ab8b0390c4cbff4c6783c3d62b, type: 3}
+  defenseNegative: {fileID: 21300000, guid: c2a651e3bdd01d14c98557752996a096, type: 3}
+  magicPositive: {fileID: 21300000, guid: de601540cef0d964c84bf3492a757082, type: 3}
+  magicNegative: {fileID: 21300000, guid: 153174d60a343984cb1a8e40ae90eccd, type: 3}
+  bleed: {fileID: 21300000, guid: c08732a5d20dd174bbd88c3d363acae1, type: 3}
+  poison: {fileID: 21300000, guid: dc91506a540e57348b2ac6e0f2acebbc, type: 3}
 --- !u!1 &1282360719
 GameObject:
   m_ObjectHideFlags: 0

@@ -54,14 +54,31 @@ public class DataDrivenMove extends IMove {
 
         for (MoveDefinition.StatusEffectDef def : definition.getStatusEffects()) {
             Character effectTarget = def.getTarget() == MoveDefinition.TargetType.self ? actor : target;
-            IStatusEffect statusEffect = buildStatusEffect(def);
-            effectTarget.getActiveEffects().add(statusEffect);
-            statusEffect.apply(effectTarget);
+
+            // Try to stack into an existing effect of the same type
+            IStatusEffect existing = effectTarget.getActiveEffects().stream()
+                    .filter(e -> e.isStackable() && e.getStatType().equals(def.getType().name()))
+                    .findFirst().orElse(null);
+
+            IStatusEffect activeEffect;
+            boolean stacked;
+            if (existing != null) {
+                existing.stack(def.getValue(), def.getDuration());
+                activeEffect = existing;
+                stacked = true;
+            } else {
+                activeEffect = buildStatusEffect(def);
+                effectTarget.getActiveEffects().add(activeEffect);
+                activeEffect.apply(effectTarget);
+                stacked = false;
+            }
+
             events.add(CombatEvent.of(CombatEventType.STATUS_EFFECT_APPLIED)
                     .with("targetId", effectTarget.getId())
-                    .with("statType", def.getType().name())
-                    .with("value", def.getValue())
-                    .with("duration", def.getDuration()));
+                    .with("statType", activeEffect.getStatType())
+                    .with("value",    activeEffect.getValue())
+                    .with("duration", activeEffect.getDuration())
+                    .with("stacked",  stacked));
         }
 
         return events;
@@ -143,9 +160,12 @@ public class DataDrivenMove extends IMove {
 
     private IStatusEffect buildStatusEffect(MoveDefinition.StatusEffectDef def) {
         return switch (def.getType()) {
-            case attack -> new AttackStatus(def.getDuration(), def.getValue());
+            case attack  -> new AttackStatus(def.getDuration(), def.getValue());
             case defense -> new DefenseStatus(def.getDuration(), def.getValue());
-            case magic -> new MagicStatus(def.getDuration(), def.getValue());
+            case magic   -> new MagicStatus(def.getDuration(), def.getValue());
+            case bleed   -> new BleedStatus(def.getValue());
+            case poison  -> new PoisonStatus(def.getDuration());
         };
     }
+
 }

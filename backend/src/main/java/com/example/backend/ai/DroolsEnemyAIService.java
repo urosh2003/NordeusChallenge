@@ -203,9 +203,9 @@ public class DroolsEnemyAIService {
             }
             if (e.getReducedBy() != null) {
                 int reduction = switch (e.getReducedBy()) {
-                    case defense -> target.getStats().getDefense();
-                    case magic   -> target.getStats().getMagic();
-                    case attack  -> target.getStats().getAttack();
+                    case defense -> 0;
+                    case magic   -> 0;
+                    case attack  -> target.getStats().getDefense();
                 };
                 v = Math.max(0, v - reduction);
             }

@@ -25,4 +25,6 @@ public class MagicStatus extends IStatusEffect {
     public void unapply(Character character) {
         character.getStats().updateMagic(-value);
     }
+
+    @Override public String getStatType() { return "magic"; }
 }

@@ -25,6 +25,8 @@ public class StatsPanel : MonoBehaviour
     [SerializeField] GameObject          statRowPrefab;
     [SerializeField] Button              confirmStatsButton;
     [SerializeField] TextMeshProUGUI     pendingPointsLabel;
+    [SerializeField] TextMeshProUGUI     levelLabel;
+    [SerializeField] TextMeshProUGUI     xpLabel;
 
     private CharacterStats   _baseStats;
     private readonly int[]   _equipBonus  = new int[4]; // health, attack, defense, magic
@@ -67,6 +69,7 @@ public class StatsPanel : MonoBehaviour
         RebuildRows(_enableChanges);
         RefreshConfirmButton();
         UpdatePendingLabel();
+        UpdatePlayerLabels();
     }
 
     /// Equipment changed — update bonus column without resetting allocation.
@@ -91,6 +94,7 @@ public class StatsPanel : MonoBehaviour
                 RebuildRows(_enableChanges);
                 RefreshConfirmButton();
                 UpdatePendingLabel();
+                UpdatePlayerLabels();
             },
             err => Debug.LogError($"[StatsPanel] SpendLevelUpPoints failed: {err}"));
     }
@@ -183,5 +187,12 @@ public class StatsPanel : MonoBehaviour
         pendingPointsLabel.text = remaining > 0
             ? $"{remaining} point{(remaining == 1 ? "" : "s")} remaining"
             : "Ready to confirm";
+    }
+
+    private void UpdatePlayerLabels()
+    {
+        var ps = GameManager.Instance?.PlayerState;
+        if (levelLabel) levelLabel.text = ps != null ? $"Level {ps.level}" : string.Empty;
+        if (xpLabel)    xpLabel.text    = ps != null ? $"XP: {ps.currentXp} / {ps.xpToNextLevel}" : string.Empty;
     }
 }

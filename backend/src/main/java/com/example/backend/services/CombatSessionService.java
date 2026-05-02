@@ -13,7 +13,6 @@ import com.example.backend.models.CombatStatus;
 import com.example.backend.models.EnvironmentDefinition;
 import com.example.backend.models.EnvironmentEffect;
 import com.example.backend.models.PlayerState;
-import com.example.backend.models.Run;
 import com.example.backend.models.RunStatus;
 import com.example.backend.models.Turn;
 import com.example.backend.exceptions.CombatNotFoundException;
@@ -24,7 +23,10 @@ import com.example.backend.repositories.RunRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.backend.models.statusEffects.IStatusEffect;
+
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,7 +59,7 @@ public class CombatSessionService {
                                        String encounterNodeId, String environmentId) {
         PlayerState playerState = playerService.getOrCreatePlayerState(runId);
         Character player = playerService.buildCombatCharacter(playerState);
-        Character enemy = characterLoader.createCharacter("enemy", enemyDefinitionId, enemyLevel);
+        Character enemy = characterLoader.createCharacter(enemyDefinitionId, enemyLevel);
 
         if (environmentId != null) {
             EnvironmentDefinition env = environmentLoader.getDefinition(environmentId);
@@ -105,31 +107,19 @@ public class CombatSessionService {
         PlayerStateResponse playerStateResponse = playerService.buildPlayerStateResponse(playerState);
 
         if (enemy.getCurrentHp() <= 0) {
-            events.add(CombatEvent.of(CombatEventType.COMBAT_ENDED).with("winnerId", player.getId()));
-            combat.setStatus(CombatStatus.COMPLETED);
-
-            List<CombatEvent> rewardEvents = playerService.processVictory(
-                    playerState, combat.getEnemyLevel(), enemy.getMoves(), combat.getEnemyDefinitionId(), player);
-            events.addAll(rewardEvents);
+            applyVictory(combat, playerState, player, enemy, events);
             playerStateResponse = playerService.buildPlayerStateResponse(playerState);
-
-            if (combat.getRunId() != null) {
-                runRepo.findById(combat.getRunId()).ifPresent(run -> {
-                    run.getNodes().stream()
-                            .filter(n -> n.getId().equals(combat.getEncounterNodeId()))
-                            .findFirst()
-                            .ifPresent(node -> {
-                                node.incrementCompletions();
-                                if (node.getRow() == 9) run.setStatus(RunStatus.COMPLETED);
-                            });
-                    runRepo.save(run);
-                });
-            }
         } else {
-            combat.setCurrentTurn(Turn.ENEMY);
-            events.add(CombatEvent.of(CombatEventType.TURN_CHANGED).with("newTurn", "ENEMY"));
-            events.add(regenEvent(enemy));
-            applyRegen(enemy);
+            tickEffects(player, events);
+            if (player.getCurrentHp() <= 0) {
+                events.add(CombatEvent.of(CombatEventType.COMBAT_ENDED).with("winnerId", enemy.getId()));
+                combat.setStatus(CombatStatus.COMPLETED);
+            } else {
+                combat.setCurrentTurn(Turn.ENEMY);
+                events.add(CombatEvent.of(CombatEventType.TURN_CHANGED).with("newTurn", "ENEMY"));
+                events.add(regenEvent(enemy));
+                applyRegen(enemy);
+            }
         }
 
         combat.setState(state);
@@ -171,32 +161,20 @@ public class CombatSessionService {
                     events.add(CombatEvent.of(CombatEventType.COMBAT_ENDED).with("winnerId", enemy.getId()));
                     combat.setStatus(CombatStatus.COMPLETED);
                 } else if (enemy.getCurrentHp() <= 0) {
-                    events.add(CombatEvent.of(CombatEventType.COMBAT_ENDED).with("winnerId", player.getId()));
-                    combat.setStatus(CombatStatus.COMPLETED);
-                    List<CombatEvent> rewardEvents = playerService.processVictory(
-                            playerState, combat.getEnemyLevel(), enemy.getMoves(),
-                            combat.getEnemyDefinitionId(), player);
-                    events.addAll(rewardEvents);
-                    if (combat.getRunId() != null) {
-                        runRepo.findById(combat.getRunId()).ifPresent(run -> {
-                            run.getNodes().stream()
-                                    .filter(n -> n.getId().equals(combat.getEncounterNodeId()))
-                                    .findFirst()
-                                    .ifPresent(node -> {
-                                        node.incrementCompletions();
-                                        if (node.getRow() == 9) run.setStatus(RunStatus.COMPLETED);
-                                    });
-                            runRepo.save(run);
-                        });
-                    }
+                    applyVictory(combat, playerState, player, enemy, events);
                 }
             }
 
             if (combat.getStatus() == CombatStatus.ACTIVE) {
-                combat.setCurrentTurn(Turn.PLAYER);
-                events.add(CombatEvent.of(CombatEventType.TURN_CHANGED).with("newTurn", "PLAYER"));
-                events.add(regenEvent(player));
-                applyRegen(player);
+                tickEffects(enemy, events);
+                if (enemy.getCurrentHp() <= 0) {
+                    applyVictory(combat, playerState, player, enemy, events);
+                } else {
+                    combat.setCurrentTurn(Turn.PLAYER);
+                    events.add(CombatEvent.of(CombatEventType.TURN_CHANGED).with("newTurn", "PLAYER"));
+                    events.add(regenEvent(player));
+                    applyRegen(player);
+                }
             }
         }
 
@@ -205,6 +183,46 @@ public class CombatSessionService {
         String currentTurn = combat.getStatus() == CombatStatus.ACTIVE ? combat.getCurrentTurn().name() : null;
         return new CombatResponse(combat.getId(), events, state, playerService.buildPlayerStateResponse(playerState),
                 currentTurn, combat.getEnvironmentId());
+    }
+
+    // ── Victory ──────────────────────────────────────────────────────────────
+
+    private void applyVictory(CombatInstance combat, PlayerState playerState,
+                              Character player, Character enemy, List<CombatEvent> events) {
+        events.add(CombatEvent.of(CombatEventType.COMBAT_ENDED).with("winnerId", player.getId()));
+        combat.setStatus(CombatStatus.COMPLETED);
+        events.addAll(playerService.processVictory(
+                playerState, combat.getEnemyLevel(), enemy.getMoves(), combat.getEnemyDefinitionId(), player));
+        if (combat.getRunId() != null) {
+            runRepo.findById(combat.getRunId()).ifPresent(run -> {
+                run.getNodes().stream()
+                        .filter(n -> n.getId().equals(combat.getEncounterNodeId()))
+                        .findFirst()
+                        .ifPresent(node -> {
+                            node.incrementCompletions();
+                            if (node.getRow() == 9) run.setStatus(RunStatus.COMPLETED);
+                        });
+                runRepo.save(run);
+            });
+        }
+    }
+
+    // ── Status effect ticking ────────────────────────────────────────────────
+
+    private void tickEffects(Character character, List<CombatEvent> events) {
+        Iterator<IStatusEffect> it = character.getActiveEffects().iterator();
+        while (it.hasNext()) {
+            IStatusEffect effect = it.next();
+            events.addAll(effect.onTick(character));
+            if (effect.onEndTurn()) {
+                effect.unapply(character);
+                it.remove();
+                events.add(CombatEvent.of(CombatEventType.STATUS_EFFECT_EXPIRED)
+                        .with("targetId", character.getId())
+                        .with("statType", effect.getStatType())
+                        .with("value",    effect.getValue()));
+            }
+        }
     }
 
     // ── Turn-start resource regen ────────────────────────────────────────────

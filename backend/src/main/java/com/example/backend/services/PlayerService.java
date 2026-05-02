@@ -285,11 +285,11 @@ public class PlayerService {
 
     private PlayerState initializeNewPlayer(UUID runId, String classId) {
         var def = characterLoader.getDefinition(classId);
-        var initialChar = characterLoader.createCharacter("player", classId, 1);
+        var initialChar = characterLoader.createCharacter(classId, 1);
 
         PlayerState ps = new PlayerState();
         ps.setRunId(runId);
-        ps.setCharacterDefinitionId(def.getId());
+        ps.setCharacterId(initialChar.getId());
         ps.setCharacterName(def.getName());
         ps.setLevel(1);
         ps.setCurrentXp(0);

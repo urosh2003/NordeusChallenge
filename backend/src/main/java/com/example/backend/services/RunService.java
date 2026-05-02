@@ -246,7 +246,7 @@ public class RunService {
 
             if (node.getType() == EncounterType.COMBAT || node.getType() == EncounterType.BOSS) {
                 CharacterDefinition def = characterLoader.getDefinition(node.getEnemyDefinitionId());
-                Character enemy = characterLoader.createCharacter("_", node.getEnemyDefinitionId(), node.getEnemyLevel());
+                Character enemy = characterLoader.createCharacter(node.getEnemyDefinitionId(), node.getEnemyLevel());
                 CharacterStats stats = enemy.getStats();
                 List<String> drops = def.getPossibleDrops() != null ? def.getPossibleDrops() : List.of();
 
@@ -289,7 +289,8 @@ public class RunService {
                 playerState.getKnownMoves(),
                 playerState.getEquippedMoves(),
                 playerState.getInventory(),
-                playerState.getEquipment()
+                playerState.getEquipment(),
+                playerState.getCharacterId()
         );
 
         Map<String, EnvironmentDefinition> environments = environmentLoader.getAll().stream()
@@ -333,9 +334,7 @@ public class RunService {
 
     private void applyRest(PlayerState ps) {
         Character combatChar = playerService.buildCombatCharacter(ps);
-        int maxHp = combatChar.getMaxHp();
-        int healAmount = Math.max(1, maxHp * 40 / 100);
-        ps.setCurrentHp(Math.min(maxHp, ps.getCurrentHp() > 0 ? ps.getCurrentHp() + healAmount : maxHp));
+        ps.setCurrentHp(combatChar.getMaxHp());
         ps.setCurrentMana(combatChar.getMaxMana());
         ps.setCurrentStamina(combatChar.getMaxStamina());
     }

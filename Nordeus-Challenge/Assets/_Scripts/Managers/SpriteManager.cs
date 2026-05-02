@@ -11,6 +11,16 @@ public class SpriteManager : MonoBehaviour
     [SerializeField] List<ClassSO>       classSOs;
     [SerializeField] List<ItemSO>        itemSOs;
 
+    [Header("Stat Type Icons")]
+    [SerializeField] Sprite attackPositive;
+    [SerializeField] Sprite attackNegative;
+    [SerializeField] Sprite defensePositive;
+    [SerializeField] Sprite defenseNegative;
+    [SerializeField] Sprite magicPositive;
+    [SerializeField] Sprite magicNegative;
+    [SerializeField] Sprite bleed;
+    [SerializeField] Sprite poison;
+
     void Awake()
     {
         if (Instance != null) { Destroy(gameObject); return; }
@@ -25,8 +35,24 @@ public class SpriteManager : MonoBehaviour
     public EnvironmentSO GetEnvironmentSO(string id)      => environmentSOs?.Find(so => so.environmentId == id);
     public ClassSO       GetClassSO(string id)            => classSOs?.Find(so => so.classId            == id);
     public ItemSO        GetItemSOById(string id)         => itemSOs?.Find(so => so.itemId              == id);
-    public List<ClassSO> GetAllClasses()                  => classSOs ?? new List<ClassSO>();
+    public List<ClassSO>       GetAllClasses()         => classSOs ?? new List<ClassSO>();
+    public List<EnvironmentSO> GetAllEnvironmentSOs()  => environmentSOs ?? new List<EnvironmentSO>();
     public Sprite        GetItemIcon(string id)           => GetItemSOById(id)?.icon;
+
+    public Sprite GetStatTypeIcon(string statType, int value) => (statType, value >= 0) switch
+    {
+        ("attack",  true)  => attackPositive,
+        ("attack",  false) => attackNegative,
+        ("defense", true)  => defensePositive,
+        ("defense", false) => defenseNegative,
+        ("magic",   true)  => magicPositive,
+        ("magic",   false) => magicNegative,
+        ("bleed",   true)  => bleed,
+        ("bleed",   false) => bleed,
+        ("poison",  true)  => poison,
+        ("poison",  false) => poison,
+        _                  => null
+    };
 
     // ── Current combat convenience ────────────────────────────────────────────
 
@@ -38,13 +64,8 @@ public class SpriteManager : MonoBehaviour
     public CharacterSO EnemySO =>
         GetCharacterSOById(CombatManager.Instance?.LocalState?.enemy?.id);
 
-    /// SO for the active combat's environment. Null if no environment is set.
-    public EnvironmentSO CurrentEnvironmentSO =>
-        GetEnvironmentSO(GameManager.Instance?.CurrentEnvironmentId);
-
     // ── Sprite shortcuts ──────────────────────────────────────────────────────
 
-    public Sprite PlayerSprite      => PlayerSO?.characterSprite;
-    public Sprite EnemySprite       => EnemySO?.characterSprite;
-    public Sprite EnvironmentSprite => CurrentEnvironmentSO?.backgroundSprite;
+    public Sprite PlayerSprite => PlayerSO?.characterSprite;
+    public Sprite EnemySprite  => EnemySO?.characterSprite;
 }

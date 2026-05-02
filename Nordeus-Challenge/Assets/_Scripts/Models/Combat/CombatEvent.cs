@@ -19,9 +19,10 @@ public class CombatEvent
     public string sourceMoveId;
 
     // STATUS_EFFECT_APPLIED
-    public string statType;      // "attack" | "defense" | "magic"
-    public int value;            // positive = buff, negative = debuff
-    public int duration;
+    public string statType;      // "attack" | "defense" | "magic" | "bleed" | "poison"
+    public int    value;         // stat change, bleed amount, or 0 for poison
+    public int    duration;
+    public bool   stacked;       // true when merged into an existing stackable effect
 
     // COMBAT_ENDED
     public string winnerId;
@@ -69,7 +70,8 @@ public static class CombatEventFormatter
             CombatEventType.MOVE_USED             => $"{e.actorId} used {e.moveId} on {e.targetId}.",
             CombatEventType.DAMAGE_DEALT          => $"{e.targetId} took {e.amount} damage.",
             CombatEventType.HEAL_RECEIVED         => $"{e.targetId} healed {e.amount} HP.",
-            CombatEventType.STATUS_EFFECT_APPLIED => $"{e.targetId}'s {e.statType} {(e.value >= 0 ? "increased" : "decreased")} by {Mathf.Abs(e.value)} for {e.duration} turns.",
+            CombatEventType.STATUS_EFFECT_APPLIED  => $"{e.targetId}'s {e.statType} {(e.value >= 0 ? "increased" : "decreased")} by {Mathf.Abs(e.value)} for {e.duration} turns.",
+            CombatEventType.STATUS_EFFECT_EXPIRED  => $"{e.targetId}'s {e.statType} effect expired.",
             CombatEventType.TURN_CHANGED          => $"It is now {e.newTurn}'s turn.",
             CombatEventType.COMBAT_ENDED          => $"Combat over! Winner: {e.winnerId}.",
             CombatEventType.XP_GAINED             => $"Gained {e.amount} XP.",

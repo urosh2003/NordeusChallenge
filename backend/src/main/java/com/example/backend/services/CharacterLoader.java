@@ -41,12 +41,12 @@ public class CharacterLoader {
                 .collect(Collectors.toList());
     }
 
-    public Character createCharacter(String instanceId, String definitionId, int level) {
+    public Character createCharacter(String definitionId, int level) {
         CharacterDefinition def = definitions.get(definitionId);
         if (def == null) throw new IllegalArgumentException("Unknown character definition: " + definitionId);
         CharacterStats stats = computeStats(def, level);
         return new Character(
-                instanceId,
+                def.getId(),
                 def.getName(),
                 stats.getHealth()  * 10,
                 stats.getMagic()   * 5,
