@@ -4,7 +4,10 @@
       "Bash(./gradlew compileJava --no-daemon)",
       "Bash(./gradlew dependencies *)",
       "Bash(./gradlew test *)",
-      "Bash(./gradlew compileJava)"
+      "Bash(./gradlew compileJava)",
+      "Bash(Get-ChildItem *)",
+      "Bash(grep -v \"^\\\\.$\")",
+      "Bash(grep -v \"^\\\\.\\\\.$\")"
     ]
   }
 }
