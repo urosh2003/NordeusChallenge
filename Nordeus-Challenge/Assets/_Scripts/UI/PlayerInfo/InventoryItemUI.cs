@@ -30,7 +30,7 @@ public class InventoryItemUI : MonoBehaviour,
         _itemId  = itemId;
         _itemDef = def;
         if (nameLabel) nameLabel.text = def?.name ?? itemId;
-        // icon.sprite = SpriteManager.Instance.GetItemSprite(itemId) once item sprites exist
+        icon.sprite = SpriteManager.Instance.GetItemIcon(itemId);
     }
 
     // ── Drag source ───────────────────────────────────────────────────────────

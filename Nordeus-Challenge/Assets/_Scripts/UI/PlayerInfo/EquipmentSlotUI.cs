@@ -44,7 +44,7 @@ public class EquipmentSlotUI : MonoBehaviour,
         {
             icon.enabled = filled;
             // Assign sprite here once item sprites are wired into SpriteManager:
-            // icon.sprite = SpriteManager.Instance.GetItemSprite(itemId);
+            icon.sprite = SpriteManager.Instance.GetItemIcon(itemId);
         }
     }
 

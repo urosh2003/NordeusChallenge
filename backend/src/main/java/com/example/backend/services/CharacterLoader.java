@@ -41,6 +41,12 @@ public class CharacterLoader {
                 .collect(Collectors.toList());
     }
 
+    public List<CharacterDefinition> getEnemies() {
+        return definitions.values().stream()
+                .filter(def -> !def.isStartingClass())
+                .collect(Collectors.toList());
+    }
+
     public Character createCharacter(String definitionId, int level) {
         CharacterDefinition def = definitions.get(definitionId);
         if (def == null) throw new IllegalArgumentException("Unknown character definition: " + definitionId);

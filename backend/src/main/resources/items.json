@@ -234,9 +234,9 @@
     "purchasable": true
   },
   {
-    "id": "arcane_gauntlets",
-    "name": "Arcane Gauntlets",
-    "description": "Gauntlets infused with channeling runes to focus magical energy.",
+    "id": "arcane_gloves",
+    "name": "Arcane Gloves",
+    "description": "Gloves infused with channeling runes to focus magical energy.",
     "itemType": "GLOVES",
     "bonusStats": { "health": 0, "attack": 0, "defense": 0, "magic": 2 },
     "passiveEffects": [
@@ -338,7 +338,7 @@
   {
     "id": "berserker_pendant",
     "name": "Berserker's Pendant",
-    "description": "A skull-shaped pendant that fills the wearer with battle rage.",
+    "description": "A pendant that fills the wearer with battle rage.",
     "itemType": "AMULET",
     "bonusStats": { "health": 0, "attack": 3, "defense": 0, "magic": 0 },
     "passiveEffects": [

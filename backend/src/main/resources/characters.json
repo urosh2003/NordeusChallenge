@@ -11,7 +11,6 @@
   {
     "id": "witch",
     "name": "Witch",
-    "startingClass": true,
     "baseStats": { "health": 7, "attack": 4, "defense": 3, "magic": 10 },
     "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 3 },
     "moves": ["shadowBolt", "drainLife", "curse", "darkPact"],
@@ -47,6 +46,89 @@
     "baseStats": { "health": 6, "attack": 3, "defense": 2, "magic": 7 },
     "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 2 },
     "moves": ["firebolt", "arcaneSurge", "manaDrain", "hexShield"],
-    "possibleDrops": ["arcane_gauntlets", "mages_shoes", "ring_of_wisdom", "wooden_shield"]
+    "possibleDrops": ["arcane_gloves", "mages_shoes", "ring_of_wisdom", "wooden_shield"]
+  },
+  {
+    "id": "skeletonWarrior",
+    "name": "Skeleton Warrior",
+    "baseStats": { "health": 7, "attack": 8, "defense": 6, "magic": 0 },
+    "statsPerLevel": { "health": 1, "attack": 2, "defense": 2, "magic": 0 },
+    "moves": ["boneSlash", "shieldBlock", "rattle", "undeadResilience"],
+    "possibleDrops": ["iron_sword", "wooden_shield", "ring_of_protection"]
+  },
+  {
+    "id": "skeletonArcher",
+    "name": "Skeleton Archer",
+    "baseStats": { "health": 5, "attack": 9, "defense": 3, "magic": 0 },
+    "statsPerLevel": { "health": 1, "attack": 2, "defense": 1, "magic": 0 },
+    "moves": ["arrowShot", "multiShot", "cripplingArrow", "evasion"],
+    "possibleDrops": ["swift_boots", "leather_boots", "ring_of_power"]
+  },
+  {
+    "id": "ghoul",
+    "name": "Ghoul",
+    "baseStats": { "health": 9, "attack": 7, "defense": 4, "magic": 2 },
+    "statsPerLevel": { "health": 2, "attack": 2, "defense": 1, "magic": 1 },
+    "moves": ["claw", "devour", "disease", "feralRush"],
+    "possibleDrops": ["fighters_gloves", "leather_armor", "ring_of_vitality"]
+  },
+  {
+    "id": "greatWolf",
+    "name": "Great Wolf",
+    "baseStats": { "health": 8, "attack": 10, "defense": 4, "magic": 0 },
+    "statsPerLevel": { "health": 1, "attack": 3, "defense": 1, "magic": 0 },
+    "moves": ["fangStrike", "howl", "packTactics", "maul"],
+    "possibleDrops": ["swift_boots", "tempered_bracers"]
+  },
+  {
+    "id": "centaur",
+    "name": "Centaur",
+    "baseStats": { "health": 10, "attack": 9, "defense": 5, "magic": 2 },
+    "statsPerLevel": { "health": 2, "attack": 2, "defense": 1, "magic": 1 },
+    "moves": ["maulSwing", "charge", "warCry", "trample"],
+    "possibleDrops": ["battle_axe", "leather_armor", "ring_of_power"]
+  },
+  {
+    "id": "minotaur",
+    "name": "Minotaur",
+    "baseStats": { "health": 14, "attack": 12, "defense": 8, "magic": 0 },
+    "statsPerLevel": { "health": 3, "attack": 3, "defense": 2, "magic": 0 },
+    "moves": ["axeSmash", "rage", "bullCharge", "stomp"],
+    "possibleDrops": ["war_axe", "plate_armor", "amulet_of_strength"]
+  },
+  {
+    "id": "archdemon",
+    "name": "Archdemon",
+    "baseStats": { "health": 16, "attack": 10, "defense": 8, "magic": 12 },
+    "statsPerLevel": { "health": 3, "attack": 2, "defense": 2, "magic": 3 },
+    "moves": ["hellfire", "soulDrain", "demonicAura", "infernalRage"],
+    "possibleDrops": ["staff_of_power", "mystic_robes", "amulet_of_magic", "berserker_pendant"]
+  },
+  {
+    "id": "assassin",
+    "name": "Assassin",
+    "startingClass": true,
+    "baseStats": { "health": 7, "attack": 11, "defense": 4, "magic": 3 },
+    "statsPerLevel": { "health": 1, "attack": 3, "defense": 1, "magic": 1 },
+    "moves": ["backstab", "poisonBlade", "vanish", "execute"],
+    "possibleDrops": []
+  },
+  {
+    "id": "ranger",
+    "name": "Ranger",
+    "startingClass": true,
+    "baseStats": { "health": 8, "attack": 9, "defense": 5, "magic": 2 },
+    "statsPerLevel": { "health": 2, "attack": 2, "defense": 1, "magic": 1 },
+    "moves": ["arrowShot", "multiShot", "trap", "focus"],
+    "possibleDrops": []
+  },
+  {
+    "id": "wizard",
+    "name": "Wizard",
+    "startingClass": true,
+    "baseStats": { "health": 6, "attack": 3, "defense": 3, "magic": 11 },
+    "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 3 },
+    "moves": ["arcaneBlast", "frostNova", "manaShield", "spellEcho"],
+    "possibleDrops": []
   }
 ]

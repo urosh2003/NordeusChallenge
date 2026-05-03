@@ -31,7 +31,7 @@ public class ClassCard : MonoBehaviour
 
         if (statsLabel)
             statsLabel.text =
-                $"HP {data.baseHealth}  ATK {data.baseAttack}  DEF {data.baseDefense}  MAG {data.baseMagic}";
+                $"HEALTH {data.baseHealth}  ATTACK {data.baseAttack}  DEFENSE {data.baseDefense}  MAGIC {data.baseMagic}";
 
         if (movesLabel && data.startingMoveNames != null)
             movesLabel.text = string.Join(" · ", data.startingMoveNames);

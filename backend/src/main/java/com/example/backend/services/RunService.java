@@ -18,14 +18,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class RunService {
 
-    private static final List<String[]> ENEMY_POOL = List.of(
-            new String[]{"witch",        "Witch"},
-            new String[]{"giantSpider",  "Giant Spider"},
-            new String[]{"dragon",       "Dragon"},
-            new String[]{"goblinWarrior","Goblin Warrior"},
-            new String[]{"goblinMage",   "Goblin Mage"}
-    );
-
     private static final int GRAPH_HEIGHT = 10;
     private static final int BOSS_ROW = GRAPH_HEIGHT - 1;
 
@@ -343,6 +335,10 @@ public class RunService {
 
     private List<EncounterNode> generateGraph(Random rng) {
         List<List<EncounterNode>> rows = new ArrayList<>();
+        List<CharacterDefinition> enemies = characterLoader.getEnemies();
+        if (enemies.isEmpty()) {
+            throw new IllegalStateException("No enemy character definitions configured");
+        }
         List<String> environmentIds = environmentLoader.getAll().stream()
                 .map(EnvironmentDefinition::getId)
                 .collect(Collectors.toList());
@@ -355,9 +351,9 @@ public class RunService {
                 String defId = null, defName = null, envId = null;
 
                 if (type == EncounterType.COMBAT || type == EncounterType.BOSS) {
-                    String[] enemy = ENEMY_POOL.get(rng.nextInt(ENEMY_POOL.size()));
-                    defId = enemy[0];
-                    defName = enemy[1];
+                    CharacterDefinition enemy = enemies.get(rng.nextInt(enemies.size()));
+                    defId = enemy.getId();
+                    defName = enemy.getName();
                     envId = environmentIds.get(rng.nextInt(environmentIds.size()));
                 }
 

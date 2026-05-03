@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac29599059e14634187a9f58c1ebda40, type: 3}
+  m_Name: RustyAxe
+  m_EditorClassIdentifier: 
+  itemId: rusty_axe
+  icon: {fileID: 63217536, guid: a52ba23edd447b045a1ad63326ad4a1f, type: 3}
