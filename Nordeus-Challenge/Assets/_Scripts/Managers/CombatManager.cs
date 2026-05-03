@@ -186,7 +186,6 @@ public class CombatManager : MonoBehaviour
         var target = ResolveCharacter(e.targetId);
         if (target == null) return;
 
-        // e.amount is already sign-aware from the backend (negative for LOSE, positive for GAIN)
         switch (e.resourceType)
         {
             case "HEALTH":
