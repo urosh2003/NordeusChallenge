@@ -48,6 +48,7 @@ public class GameManager : MonoBehaviour
 
     /// Fired whenever the run map changes (create, continue, start combat updates encounter list).
     public static event Action<RunResponse>         OnRunUpdated;
+    public static event Action         OnRunCompleted;
 
     /// Fired after every combat action (player move, enemy turn, combat start).
     /// Check events list for COMBAT_ENDED, MOVE_LEARNT, LEVEL_UP, etc.
@@ -197,6 +198,15 @@ public class GameManager : MonoBehaviour
             err  => HandleError(err, onError)));
     }
 
+    /// <summary>POST /api/combats/{combatId}/pass — skip the player's turn without using a move.</summary>
+    public void PlayerPass(Action<CombatResponse> onSuccess = null, Action<string> onError = null)
+    {
+        if (!EnsureCombat(onError)) return;
+        StartCoroutine(HttpHelpers.Post($"{baseUrl}/combats/{CurrentCombatId}/pass", null,
+            json => { var r = JsonConvert.DeserializeObject<CombatResponse>(json); ApplyCombat(r); onSuccess?.Invoke(r); },
+            err  => HandleError(err, onError)));
+    }
+
     /// <summary>
     /// GET /api/combats/{combatId} — restore a combat that was already in progress.
     /// Used when continuing a run that had an active fight (activeCombatId from RunResponse).
@@ -295,8 +305,15 @@ public class GameManager : MonoBehaviour
     {
         CurrentRun = run;
 
-        if (run.IsCompleted) ClearSavedRun();
-        else                 SaveRunId(run.runId);
+        if (run.IsCompleted)
+        {
+            ClearSavedRun();
+            OnRunCompleted?.Invoke();
+        }
+        else
+        {
+            SaveRunId(run.runId);
+        }
 
         OnRunUpdated?.Invoke(run);
     }
@@ -306,7 +323,8 @@ public class GameManager : MonoBehaviour
         CurrentCombatId      = response.combatId;
         CurrentCombat        = response.state;
         CurrentEnvironmentId = response.environmentId;
-
+        bool runComplete = false;
+        
         // Authoritative turn from server field (reliable on load/restore with empty events)
         if (!string.IsNullOrEmpty(response.currentTurn))
             IsPlayerTurn = response.currentTurn == "PLAYER";

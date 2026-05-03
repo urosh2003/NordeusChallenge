@@ -1,6 +1,6 @@
 package com.example.backend.utils;
 
-import com.example.backend.models.CharacterStats;
+import com.example.backend.models.characters.CharacterStats;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import tools.jackson.databind.ObjectMapper;

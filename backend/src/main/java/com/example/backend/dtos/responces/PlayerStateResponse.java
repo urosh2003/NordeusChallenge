@@ -1,8 +1,8 @@
 package com.example.backend.dtos.responces;
 
-import com.example.backend.models.CharacterStats;
-import com.example.backend.models.Equipment;
-import com.example.backend.models.PlayerState;
+import com.example.backend.models.characters.CharacterStats;
+import com.example.backend.models.items.Equipment;
+import com.example.backend.models.players.PlayerState;
 
 import java.util.List;
 import java.util.UUID;

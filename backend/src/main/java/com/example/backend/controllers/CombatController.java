@@ -2,7 +2,7 @@ package com.example.backend.controllers;
 
 import com.example.backend.dtos.requests.MoveRequest;
 import com.example.backend.dtos.responces.CombatResponse;
-import com.example.backend.services.CombatSessionService;
+import com.example.backend.services.combats.CombatSessionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +30,11 @@ public class CombatController {
             @PathVariable UUID combatId,
             @RequestBody MoveRequest request) {
         return ResponseEntity.ok(combatSessionService.processPlayerAction(combatId, request.moveId()));
+    }
+
+    @PostMapping("/{combatId}/pass")
+    public ResponseEntity<CombatResponse> playerPass(@PathVariable UUID combatId) {
+        return ResponseEntity.ok(combatSessionService.processPlayerPass(combatId));
     }
 
     @GetMapping("/{combatId}/enemy-turn")

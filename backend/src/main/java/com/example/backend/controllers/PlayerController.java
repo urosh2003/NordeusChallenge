@@ -2,11 +2,11 @@ package com.example.backend.controllers;
 
 import com.example.backend.dtos.requests.EquipEquipmentRequest;
 import com.example.backend.dtos.requests.EquipMovesRequest;
-import com.example.backend.models.Equipment;
+import com.example.backend.models.items.Equipment;
 import com.example.backend.dtos.requests.StatDistributionRequest;
 import com.example.backend.dtos.responces.PlayerStateResponse;
-import com.example.backend.services.PlayerService;
-import com.example.backend.services.RunService;
+import com.example.backend.services.players.PlayerService;
+import com.example.backend.services.runs.RunService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

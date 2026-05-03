@@ -143,8 +143,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4949737209101834853}
+  - component: {fileID: 8791675506435401127}
   - component: {fileID: 2283668205566261577}
-  - component: {fileID: 9081222871202179697}
   - component: {fileID: 8227212744387026228}
   - component: {fileID: 6243991461394013578}
   m_Layer: 5
@@ -175,15 +175,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 38, y: 38}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &2283668205566261577
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5233458041216394353}
-  m_CullTransparentMesh: 1
---- !u!114 &9081222871202179697
+--- !u!114 &8791675506435401127
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -192,12 +184,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 5233458041216394353}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9c0c08a437778a4e9b9c82ec03d39c5, type: 3}
+  m_Script: {fileID: 11500000, guid: 288f3c1cec03d264387edc93de930abd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   icon: {fileID: 8174618940874953227}
-  nameLabel: {fileID: 4119543179920660930}
+  nameLabel: {fileID: 0}
   canvasGroup: {fileID: 6243991461394013578}
+--- !u!222 &2283668205566261577
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5233458041216394353}
+  m_CullTransparentMesh: 1
 --- !u!114 &8227212744387026228
 MonoBehaviour:
   m_ObjectHideFlags: 0

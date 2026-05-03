@@ -1,8 +1,8 @@
 package com.example.backend.models.statusEffects;
 
-import com.example.backend.combat.CombatEvent;
-import com.example.backend.combat.CombatEventType;
-import com.example.backend.models.Character;
+import com.example.backend.models.combats.CombatEvent;
+import com.example.backend.models.combats.CombatEventType;
+import com.example.backend.models.characters.Character;
 import lombok.Getter;
 import lombok.Setter;
 

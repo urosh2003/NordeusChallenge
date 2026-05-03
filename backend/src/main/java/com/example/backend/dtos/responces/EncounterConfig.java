@@ -1,7 +1,7 @@
 package com.example.backend.dtos.responces;
 
-import com.example.backend.models.CharacterStats;
-import com.example.backend.models.EncounterType;
+import com.example.backend.models.characters.CharacterStats;
+import com.example.backend.models.encounters.EncounterType;
 
 import java.util.List;
 

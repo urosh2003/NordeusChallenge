@@ -1,8 +1,8 @@
 package com.example.backend.dtos.responces;
 
-import com.example.backend.models.EncounterNode;
-import com.example.backend.models.EncounterType;
-import com.example.backend.models.ShopOffer;
+import com.example.backend.models.encounters.EncounterNode;
+import com.example.backend.models.encounters.EncounterType;
+import com.example.backend.models.encounters.ShopOffer;
 
 import java.util.List;
 

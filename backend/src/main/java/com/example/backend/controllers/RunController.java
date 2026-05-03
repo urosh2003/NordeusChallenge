@@ -2,7 +2,7 @@ package com.example.backend.controllers;
 
 import com.example.backend.dtos.requests.CreateRunRequest;
 import com.example.backend.dtos.responces.*;
-import com.example.backend.services.RunService;
+import com.example.backend.services.runs.RunService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

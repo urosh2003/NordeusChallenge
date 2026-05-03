@@ -1,7 +1,7 @@
 package com.example.backend.repositories;
 
-import com.example.backend.models.CombatInstance;
-import com.example.backend.models.CombatStatus;
+import com.example.backend.models.combats.CombatInstance;
+import com.example.backend.models.combats.CombatStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

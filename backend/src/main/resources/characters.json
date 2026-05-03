@@ -3,7 +3,7 @@
     "id": "knight",
     "name": "Knight",
     "startingClass": true,
-    "baseStats": { "health": 10, "attack": 10, "defense": 8, "magic": 3 },
+    "baseStats": { "health": 8, "attack": 8, "defense": 8, "magic": 3 },
     "statsPerLevel": { "health": 2, "attack": 2, "defense": 2, "magic": 1 },
     "moves": ["slash", "shieldUp", "battleCry", "secondWind"],
     "possibleDrops": []
@@ -11,96 +11,98 @@
   {
     "id": "witch",
     "name": "Witch",
-    "baseStats": { "health": 7, "attack": 4, "defense": 3, "magic": 10 },
-    "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 3 },
+    "baseStats": { "health": 4, "attack": 2, "defense": 1, "magic": 5 },
+    "statsPerLevel": { "health": 1, "attack": 0, "defense": 0, "magic": 2 },
     "moves": ["shadowBolt", "drainLife", "curse", "darkPact"],
     "possibleDrops": ["enchanted_blade", "mystic_robes", "arcane_buckler", "amulet_of_magic"]
   },
   {
     "id": "giantSpider",
     "name": "Giant Spider",
-    "baseStats": { "health": 8, "attack": 9, "defense": 5, "magic": 1 },
-    "statsPerLevel": { "health": 1, "attack": 2, "defense": 1, "magic": 0 },
+    "baseStats": { "health": 5, "attack": 4, "defense": 3, "magic": 1 },
+    "statsPerLevel": { "health": 1, "attack": 1, "defense": 0, "magic": 0 },
     "moves": ["bite", "webThrow", "pounce", "skitter"],
     "possibleDrops": ["swift_boots", "leather_boots", "tempered_bracers", "ring_of_protection"]
   },
   {
     "id": "dragon",
     "name": "Dragon",
-    "baseStats": { "health": 15, "attack": 14, "defense": 10, "magic": 8 },
-    "statsPerLevel": { "health": 2, "attack": 3, "defense": 2, "magic": 2 },
+    "isBoss": true,
+    "baseStats": { "health": 10, "attack": 10, "defense": 10, "magic": 10 },
+    "statsPerLevel": { "health": 2, "attack": 1, "defense": 0, "magic": 1 },
     "moves": ["flameBreath", "clawSwipe", "intimidate", "dragonScales"],
     "possibleDrops": ["dragon_slayer", "plate_armor", "guardians_shield", "amulet_of_strength", "berserker_pendant"]
   },
   {
     "id": "goblinWarrior",
     "name": "Goblin Warrior",
-    "baseStats": { "health": 6, "attack": 8, "defense": 4, "magic": 0 },
-    "statsPerLevel": { "health": 1, "attack": 2, "defense": 1, "magic": 0 },
+    "baseStats": { "health": 6, "attack": 5, "defense": 4, "magic": 0 },
+    "statsPerLevel": { "health": 0, "attack": 1, "defense": 1, "magic": 0 },
     "moves": ["rustyBlade", "dirtyKick", "frenzy", "headbutt"],
     "possibleDrops": ["bone_club", "leather_armor", "fighters_gloves", "ring_of_power"]
   },
   {
     "id": "goblinMage",
     "name": "Goblin Mage",
-    "baseStats": { "health": 6, "attack": 3, "defense": 2, "magic": 7 },
-    "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 2 },
+    "baseStats": { "health": 5, "attack": 3, "defense": 2, "magic": 5 },
+    "statsPerLevel": { "health": 1, "attack": 0, "defense": 0, "magic": 2 },
     "moves": ["firebolt", "arcaneSurge", "manaDrain", "hexShield"],
     "possibleDrops": ["arcane_gloves", "mages_shoes", "ring_of_wisdom", "wooden_shield"]
   },
   {
     "id": "skeletonWarrior",
     "name": "Skeleton Warrior",
-    "baseStats": { "health": 7, "attack": 8, "defense": 6, "magic": 0 },
-    "statsPerLevel": { "health": 1, "attack": 2, "defense": 2, "magic": 0 },
+    "baseStats": { "health": 2, "attack": 2, "defense": 6, "magic": 0 },
+    "statsPerLevel": { "health": 1, "attack": 0, "defense": 1, "magic": 0 },
     "moves": ["boneSlash", "shieldBlock", "rattle", "undeadResilience"],
     "possibleDrops": ["iron_sword", "wooden_shield", "ring_of_protection"]
   },
   {
     "id": "skeletonArcher",
     "name": "Skeleton Archer",
-    "baseStats": { "health": 5, "attack": 9, "defense": 3, "magic": 0 },
-    "statsPerLevel": { "health": 1, "attack": 2, "defense": 1, "magic": 0 },
+    "baseStats": { "health": 2, "attack": 5, "defense": 1, "magic": 0 },
+    "statsPerLevel": { "health": 1, "attack": 2, "defense": 0, "magic": 0 },
     "moves": ["arrowShot", "multiShot", "cripplingArrow", "evasion"],
     "possibleDrops": ["swift_boots", "leather_boots", "ring_of_power"]
   },
   {
     "id": "ghoul",
     "name": "Ghoul",
-    "baseStats": { "health": 9, "attack": 7, "defense": 4, "magic": 2 },
-    "statsPerLevel": { "health": 2, "attack": 2, "defense": 1, "magic": 1 },
+    "baseStats": { "health": 6, "attack": 4, "defense": 3, "magic": 2 },
+    "statsPerLevel": { "health": 1, "attack": 1, "defense": 0, "magic": 1 },
     "moves": ["claw", "devour", "disease", "feralRush"],
     "possibleDrops": ["fighters_gloves", "leather_armor", "ring_of_vitality"]
   },
   {
     "id": "greatWolf",
     "name": "Great Wolf",
-    "baseStats": { "health": 8, "attack": 10, "defense": 4, "magic": 0 },
-    "statsPerLevel": { "health": 1, "attack": 3, "defense": 1, "magic": 0 },
+    "baseStats": { "health": 5, "attack": 3, "defense": 3, "magic": 0 },
+    "statsPerLevel": { "health": 1, "attack": 1, "defense": 0, "magic": 0 },
     "moves": ["fangStrike", "howl", "packTactics", "maul"],
     "possibleDrops": ["swift_boots", "tempered_bracers"]
   },
   {
     "id": "centaur",
     "name": "Centaur",
-    "baseStats": { "health": 10, "attack": 9, "defense": 5, "magic": 2 },
-    "statsPerLevel": { "health": 2, "attack": 2, "defense": 1, "magic": 1 },
+    "baseStats": { "health": 6, "attack": 3, "defense": 3, "magic": 2 },
+    "statsPerLevel": { "health": 1, "attack": 1, "defense": 0, "magic": 0 },
     "moves": ["maulSwing", "charge", "warCry", "trample"],
     "possibleDrops": ["battle_axe", "leather_armor", "ring_of_power"]
   },
   {
     "id": "minotaur",
     "name": "Minotaur",
-    "baseStats": { "health": 14, "attack": 12, "defense": 8, "magic": 0 },
-    "statsPerLevel": { "health": 3, "attack": 3, "defense": 2, "magic": 0 },
+    "baseStats": { "health": 6, "attack": 3, "defense": 3, "magic": 2 },
+    "statsPerLevel": { "health": 1, "attack": 1, "defense": 0, "magic": 0 },
     "moves": ["axeSmash", "rage", "bullCharge", "stomp"],
     "possibleDrops": ["war_axe", "plate_armor", "amulet_of_strength"]
   },
   {
     "id": "archdemon",
     "name": "Archdemon",
-    "baseStats": { "health": 16, "attack": 10, "defense": 8, "magic": 12 },
-    "statsPerLevel": { "health": 3, "attack": 2, "defense": 2, "magic": 3 },
+    "isBoss": true,
+    "baseStats": { "health": 10, "attack": 10, "defense": 10, "magic": 12 },
+    "statsPerLevel": { "health": 1, "attack": 1, "defense": 0, "magic": 1 },
     "moves": ["hellfire", "soulDrain", "demonicAura", "infernalRage"],
     "possibleDrops": ["staff_of_power", "mystic_robes", "amulet_of_magic", "berserker_pendant"]
   },
@@ -108,7 +110,7 @@
     "id": "assassin",
     "name": "Assassin",
     "startingClass": true,
-    "baseStats": { "health": 7, "attack": 11, "defense": 4, "magic": 3 },
+    "baseStats": { "health": 6, "attack": 14, "defense": 4, "magic": 3 },
     "statsPerLevel": { "health": 1, "attack": 3, "defense": 1, "magic": 1 },
     "moves": ["backstab", "poisonBlade", "vanish", "execute"],
     "possibleDrops": []
@@ -117,7 +119,7 @@
     "id": "ranger",
     "name": "Ranger",
     "startingClass": true,
-    "baseStats": { "health": 8, "attack": 9, "defense": 5, "magic": 2 },
+    "baseStats": { "health": 8, "attack": 10, "defense": 5, "magic": 4 },
     "statsPerLevel": { "health": 2, "attack": 2, "defense": 1, "magic": 1 },
     "moves": ["arrowShot", "multiShot", "trap", "focus"],
     "possibleDrops": []
@@ -126,7 +128,7 @@
     "id": "wizard",
     "name": "Wizard",
     "startingClass": true,
-    "baseStats": { "health": 6, "attack": 3, "defense": 3, "magic": 11 },
+    "baseStats": { "health": 7, "attack": 3, "defense": 3, "magic": 14 },
     "statsPerLevel": { "health": 1, "attack": 1, "defense": 1, "magic": 3 },
     "moves": ["arcaneBlast", "frostNova", "manaShield", "spellEcho"],
     "possibleDrops": []

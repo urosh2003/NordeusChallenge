@@ -1,6 +1,6 @@
 package com.example.backend.utils;
 
-import com.example.backend.models.CombatState;
+import com.example.backend.models.combats.CombatState;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

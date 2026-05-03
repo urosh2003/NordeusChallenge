@@ -1,9 +1,9 @@
 package com.example.backend.ai.rules
 
-import com.example.backend.ai.facts.CombatEventFact;
-import com.example.backend.ai.facts.PlayerBehaviorProfile;
-import com.example.backend.ai.BehaviorType;
-import com.example.backend.ai.MoveCategory;
+import com.example.backend.services.ai.facts.CombatEventFact;
+import com.example.backend.services.ai.facts.PlayerBehaviorProfile;
+import com.example.backend.services.ai.BehaviorType;
+import com.example.backend.services.ai.MoveCategory;
 
 declare CombatEventFact
     @role(event)

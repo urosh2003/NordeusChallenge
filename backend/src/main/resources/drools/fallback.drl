@@ -1,9 +1,9 @@
 package com.example.backend.ai.rules
 
-import com.example.backend.ai.facts.MoveOption;
-import com.example.backend.ai.facts.EnemyDecision;
-import com.example.backend.ai.facts.Tactic;
-import com.example.backend.ai.TacticType;
+import com.example.backend.services.ai.facts.MoveOption;
+import com.example.backend.services.ai.facts.EnemyDecision;
+import com.example.backend.services.ai.facts.Tactic;
+import com.example.backend.services.ai.TacticType;
 
 // L2 fallback tactic: if no other tactic was chosen, maximize damage
 rule "ChooseFallbackTactic"

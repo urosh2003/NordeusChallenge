@@ -1,7 +1,7 @@
 package com.example.backend.dtos.responces;
 
-import com.example.backend.models.Run;
-import com.example.backend.models.RunStatus;
+import com.example.backend.models.runs.Run;
+import com.example.backend.models.runs.RunStatus;
 
 import java.util.List;
 import java.util.UUID;

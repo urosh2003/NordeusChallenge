@@ -1,11 +1,11 @@
 package com.example.backend.ai.rules
 
-import com.example.backend.ai.facts.EnemyFact;
-import com.example.backend.ai.facts.PlayerFact;
-import com.example.backend.ai.facts.ResourceStatus;
-import com.example.backend.ai.facts.StatComparison;
-import com.example.backend.ai.ResourceStatusType;
-import com.example.backend.ai.StatComparisonType;
+import com.example.backend.services.ai.facts.EnemyFact;
+import com.example.backend.services.ai.facts.PlayerFact;
+import com.example.backend.services.ai.facts.ResourceStatus;
+import com.example.backend.services.ai.facts.StatComparison;
+import com.example.backend.services.ai.ResourceStatusType;
+import com.example.backend.services.ai.StatComparisonType;
 
 // Universal L1 — Resource assessment
 rule "EvaluateResourceStaminaStarved"

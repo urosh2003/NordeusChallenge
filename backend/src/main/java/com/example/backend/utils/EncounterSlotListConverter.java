@@ -1,6 +1,6 @@
 package com.example.backend.utils;
 
-import com.example.backend.models.EncounterSlot;
+import com.example.backend.models.encounters.EncounterSlot;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import tools.jackson.databind.ObjectMapper;

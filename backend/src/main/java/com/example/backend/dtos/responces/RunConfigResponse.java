@@ -1,8 +1,8 @@
 package com.example.backend.dtos.responces;
 
-import com.example.backend.combat.MoveDefinition;
-import com.example.backend.models.EnvironmentDefinition;
-import com.example.backend.models.ItemDefinition;
+import com.example.backend.models.moves.MoveDefinition;
+import com.example.backend.models.environments.EnvironmentDefinition;
+import com.example.backend.models.items.ItemDefinition;
 
 import java.util.List;
 import java.util.Map;

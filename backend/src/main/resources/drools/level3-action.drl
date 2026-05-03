@@ -1,11 +1,23 @@
 package com.example.backend.ai.rules
 
-import com.example.backend.ai.facts.*;
-import com.example.backend.ai.TacticType;
-import com.example.backend.ai.MoveCategory;
-import com.example.backend.ai.ThreatLevel;
-import com.example.backend.ai.StatComparisonType;
-import com.example.backend.ai.ResourceStatusType;
+import com.example.backend.services.ai.facts.*;
+import com.example.backend.services.ai.TacticType;
+import com.example.backend.services.ai.MoveCategory;
+import com.example.backend.services.ai.ThreatLevel;
+
+// Backward-chaining first: if a lethal move exists, play it immediately.
+rule "EmitImmediateKillMove"
+    salience 200
+when
+    $p : PlayerFact($hp : currentHp)
+    ?canKillPlayer($hp; )
+    not EnemyDecision(priority >= 100)
+    $best : MoveOption(projectedValue >= $hp, $val : projectedValue)
+    not MoveOption(projectedValue >= $hp, projectedValue > $val)
+then
+    insert(new EnemyDecision($best.getMoveId(), 100,
+            "Immediate lethal move available: " + $best.getMoveId()));
+end
 
 // L3 — MAXIMIZE_DAMAGE: prefer vulnerable damage type if player has a debuff active
 rule "EmitMaximizeDamagePhysicalVulnerable"
@@ -102,46 +114,3 @@ then
             "Conservative (low-resource) tactic: " + $opt.getMoveId()));
 end
 
-// Universal L2 — stat disadvantage → debuff player
-rule "ChooseDebuffPlayerTactic"
-    salience 50
-when
-    StatComparison(type == StatComparisonType.PLAYER_PHYSICAL_DOMINATES ||
-                   type == StatComparisonType.PLAYER_MAGIC_DOMINATES)
-    MoveOption(moveCategory == MoveCategory.ENEMY_DEBUFF)
-    not Tactic()
-then
-    insert(new Tactic(TacticType.DEBUFF_PLAYER));
-end
-
-// Universal L2 — resources low → conservative
-rule "ChooseConservativeTactic"
-    salience 45
-when
-    ResourceStatus(type == ResourceStatusType.STARVED)
-    not Tactic()
-then
-    insert(new Tactic(TacticType.CONSERVATIVE));
-end
-
-// Universal L2 — high HP and DRAIN available → drain
-rule "ChooseDrainTactic"
-    salience 40
-when
-    PerceivedThreat(level == ThreatLevel.CRITICAL || level == ThreatLevel.HIGH)
-    MoveOption(moveCategory == MoveCategory.DRAIN)
-    not Tactic()
-then
-    insert(new Tactic(TacticType.DRAIN));
-end
-
-// Universal L2 — safe HP with SELF_BUFF available
-rule "ChooseSelfBuffTactic"
-    salience 35
-when
-    not PerceivedThreat(level == ThreatLevel.CRITICAL)
-    MoveOption(moveCategory == MoveCategory.SELF_BUFF)
-    not Tactic()
-then
-    insert(new Tactic(TacticType.SELF_BUFF));
-end

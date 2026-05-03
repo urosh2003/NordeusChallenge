@@ -1,6 +1,6 @@
 package com.example.backend.dtos.responces;
 
-import com.example.backend.models.Equipment;
+import com.example.backend.models.items.Equipment;
 
 import java.util.List;
 

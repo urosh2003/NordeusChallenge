@@ -1,7 +1,7 @@
 package com.example.backend.dtos.responces;
 
-import com.example.backend.combat.CombatEvent;
-import com.example.backend.models.CombatState;
+import com.example.backend.models.combats.CombatEvent;
+import com.example.backend.models.combats.CombatState;
 
 import java.util.List;
 import java.util.UUID;

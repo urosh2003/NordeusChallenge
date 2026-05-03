@@ -1,6 +1,6 @@
 package com.example.backend.dtos.responces;
 
-import com.example.backend.models.EncounterSlot;
+import com.example.backend.models.encounters.EncounterSlot;
 
 public record EncounterSlotResponse(
         int index,

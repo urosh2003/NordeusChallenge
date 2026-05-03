@@ -22,6 +22,12 @@ public class CharacterSpriteManager : MonoBehaviour
         RefreshEnemySprites(CombatManager.Instance?.LocalState);
     }
 
+    void OnDestroy()
+    {
+        CombatManager.OnCombatInitialized -= RefreshEnemySprites;
+        CombatEventProcessor.OnAnyEvent -= HitSprite;
+    }
+
     private void HitSprite(CombatEvent e)
     {
         if (e == null) return;
