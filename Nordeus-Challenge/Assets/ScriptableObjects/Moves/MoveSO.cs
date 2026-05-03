@@ -7,4 +7,5 @@ public class MoveSO : ScriptableObject
 {
     public string moveId;
     public Sprite moveIcon;
+    public AudioClip moveSound;
 }

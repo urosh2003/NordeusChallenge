@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: packTactics
   moveIcon: {fileID: 21300000, guid: e47bc8b106de576419c52a1fb36c90e3, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

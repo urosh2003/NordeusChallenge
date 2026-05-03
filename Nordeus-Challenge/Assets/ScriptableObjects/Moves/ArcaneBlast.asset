@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: arcaneBlast
   moveIcon: {fileID: 21300000, guid: fce0c6078ba814b41bc9b1fa0828e337, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

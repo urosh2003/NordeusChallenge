@@ -91,4 +91,6 @@ public class MainMenuManager : MonoBehaviour
         SetLoading(false);
         continueRunButton.interactable = GameManager.HasSavedRun;
     }
+    
+    public void Exit() => Application.Quit();
 }

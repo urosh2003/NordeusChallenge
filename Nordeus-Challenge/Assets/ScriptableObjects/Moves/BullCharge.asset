@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: bullCharge
   moveIcon: {fileID: 21300000, guid: 140d656c2091177428217394250b089c, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

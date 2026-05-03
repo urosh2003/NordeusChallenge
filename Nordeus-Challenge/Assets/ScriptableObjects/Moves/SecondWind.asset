@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: secondWind
   moveIcon: {fileID: 21300000, guid: d0095d09d3ab6814c8c6b9b2c34b610d, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

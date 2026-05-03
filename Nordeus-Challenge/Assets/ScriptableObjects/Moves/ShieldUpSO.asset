@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: shieldUp
   moveIcon: {fileID: 21300000, guid: 5ff75befd964a7d4492dca3b36e87ded, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

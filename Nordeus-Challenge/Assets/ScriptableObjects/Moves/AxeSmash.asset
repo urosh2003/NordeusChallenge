@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: axeSmash
   moveIcon: {fileID: 21300000, guid: 57cb509930e2a894b90c73d624306d0e, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

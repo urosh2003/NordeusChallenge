@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: multiShot
   moveIcon: {fileID: 21300000, guid: 52dfadc90c4ff5d44ba04e17f00caf97, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

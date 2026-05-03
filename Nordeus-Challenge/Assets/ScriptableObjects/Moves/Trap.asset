@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: trap
   moveIcon: {fileID: 21300000, guid: 4dfb1c5aa4ef0b549aa1ddf17187ba2a, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

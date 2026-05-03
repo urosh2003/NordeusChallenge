@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: stomp
   moveIcon: {fileID: 21300000, guid: 2eb983954aed01b40b7ef0e204b2fb29, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

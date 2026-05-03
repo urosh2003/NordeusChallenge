@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: clawSwipe
   moveIcon: {fileID: 21300000, guid: fa8ceb7f2fd97764cbfafd9e9883b55d, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

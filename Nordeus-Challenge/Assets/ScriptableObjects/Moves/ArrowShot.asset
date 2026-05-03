@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: arrowShot
   moveIcon: {fileID: 21300000, guid: 58aa48ce20a97d045b97ba8397fdcbdd, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

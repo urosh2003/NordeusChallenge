@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: disease
   moveIcon: {fileID: 21300000, guid: c6b99a89d3fe28540aac22e057280e2a, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

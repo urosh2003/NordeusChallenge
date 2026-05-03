@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: slash
   moveIcon: {fileID: 21300000, guid: bb364a38ac86b7144b6b308c92928e8d, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

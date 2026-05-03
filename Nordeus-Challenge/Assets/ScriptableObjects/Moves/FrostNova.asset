@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: frostNova
   moveIcon: {fileID: 21300000, guid: 4b6b83150e71c234d85b3e953397d1b9, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

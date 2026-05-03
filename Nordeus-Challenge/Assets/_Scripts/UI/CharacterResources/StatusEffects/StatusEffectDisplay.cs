@@ -49,6 +49,7 @@ public class StatusEffectDisplay : MonoBehaviour
     // ── Event handlers ────────────────────────────────────────────────────────
     private void OnCombatEnded(CombatEvent combatEvent)
     {
+        foreach (var icon in _icons) Destroy(icon.gameObject);
         _icons.Clear();
     }
     

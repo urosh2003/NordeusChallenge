@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: skitter
   moveIcon: {fileID: 21300000, guid: aa57e89c4f0fcbe4d879ae320ba5e823, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}

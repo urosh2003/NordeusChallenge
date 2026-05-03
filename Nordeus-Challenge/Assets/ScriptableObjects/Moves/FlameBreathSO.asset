@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveId: flameBreath
   moveIcon: {fileID: 21300000, guid: 52b1eca6014587d49bb03eb0b0ba869c, type: 3}
+  moveSound: {fileID: 8300000, guid: 138c7e25b55110240aaa695f75b94bca, type: 3}
