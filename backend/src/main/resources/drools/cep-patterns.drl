@@ -2,6 +2,7 @@ package com.example.backend.ai.rules
 
 import com.example.backend.services.ai.facts.CombatEventFact;
 import com.example.backend.services.ai.facts.PlayerBehaviorProfile;
+import com.example.backend.services.ai.facts.CantFinishPlayer;
 import com.example.backend.services.ai.BehaviorType;
 import com.example.backend.services.ai.MoveCategory;
 
@@ -15,8 +16,8 @@ end
 
 // CEP: player used physical damage moves 3+ times in last 4 MOVE_USED events
 rule "DetectPlayerPhysicalSpammer"
-    salience 90
 when
+    CantFinishPlayer()
     not PlayerBehaviorProfile(type == BehaviorType.PHYSICAL_SPAMMER)
     Number(intValue >= 3) from accumulate(
         CombatEventFact(source == "player",
@@ -32,8 +33,8 @@ end
 
 // CEP: player used a debuff then attacked on the very next event sequence
 rule "DetectPlayerComboSetup"
-    salience 90
 when
+    CantFinishPlayer()
     not PlayerBehaviorProfile(type == BehaviorType.COMBO_PLAYER)
     $e1 : CombatEventFact(source == "player",
                           moveCategory == MoveCategory.ENEMY_DEBUFF)

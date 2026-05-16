@@ -7,7 +7,13 @@
       "Bash(./gradlew compileJava)",
       "Bash(Get-ChildItem *)",
       "Bash(grep -v \"^\\\\.$\")",
-      "Bash(grep -v \"^\\\\.\\\\.$\")"
+      "Bash(grep -v \"^\\\\.\\\\.$\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(grep -E \"\\\\.java$|\\\\.xml$\")",
+      "PowerShell(Get-ChildItem -Path F:\\\\NordeusChallenge\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\example\\\\backend -Recurse -File | Where-Object {$_.Extension -eq \".java\"} | Measure-Object)",
+      "Read(//f/NordeusChallenge/**)",
+      "WebSearch"
     ]
   }
 }

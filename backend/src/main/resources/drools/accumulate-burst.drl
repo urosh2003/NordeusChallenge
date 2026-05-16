@@ -3,12 +3,13 @@ package com.example.backend.ai.rules
 import com.example.backend.services.ai.facts.EnemyFact;
 import com.example.backend.services.ai.facts.CombatEventFact;
 import com.example.backend.services.ai.facts.BurstDamageAssessment;
+import com.example.backend.services.ai.facts.CantFinishPlayer;
 import com.example.backend.services.ai.Severity;
 
 // Accumulate: sum player damage dealt to enemy over last 3 events (window:length)
 rule "AssessBurstDamageRisk"
-    salience 90
 when
+    CantFinishPlayer()
     $enemy : EnemyFact($maxHp : maxHp)
     not BurstDamageAssessment()
     $total : Number(intValue > 0) from accumulate(

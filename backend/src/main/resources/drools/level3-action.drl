@@ -5,9 +5,9 @@ import com.example.backend.services.ai.TacticType;
 import com.example.backend.services.ai.MoveCategory;
 import com.example.backend.services.ai.ThreatLevel;
 
-// Backward-chaining first: if a lethal move exists, play it immediately.
+// Fires directly from input facts when a lethal move exists — no derived facts needed.
+// Mutually exclusive with ConfirmNoImmediateKill in level1-perception.drl.
 rule "EmitImmediateKillMove"
-    salience 200
 when
     $p : PlayerFact($hp : currentHp)
     ?canKillPlayer($hp; )
@@ -19,9 +19,10 @@ then
             "Immediate lethal move available: " + $best.getMoveId()));
 end
 
+// All remaining L3 rules are triggered by Tactic inserted by L2.
+
 // L3 — MAXIMIZE_DAMAGE: prefer vulnerable damage type if player has a debuff active
 rule "EmitMaximizeDamagePhysicalVulnerable"
-    salience 20
 when
     Tactic(type == TacticType.MAXIMIZE_DAMAGE)
     not EnemyDecision(priority >= 10)
@@ -34,7 +35,6 @@ then
 end
 
 rule "EmitMaximizeDamageMagicVulnerable"
-    salience 20
 when
     Tactic(type == TacticType.MAXIMIZE_DAMAGE)
     not EnemyDecision(priority >= 10)
@@ -48,7 +48,6 @@ end
 
 // L3 — MAXIMIZE_DAMAGE: no specific vulnerability; pick highest-value damage move
 rule "EmitMaximizeDamageAny"
-    salience 10
 when
     Tactic(type == TacticType.MAXIMIZE_DAMAGE)
     not EnemyDecision(priority >= 9)
@@ -67,7 +66,6 @@ end
 
 // L3 — SELF_BUFF tactic
 rule "EmitSelfBuffMove"
-    salience 10
 when
     Tactic(type == TacticType.SELF_BUFF)
     not EnemyDecision(priority >= 7)
@@ -79,7 +77,6 @@ end
 
 // L3 — DEBUFF_PLAYER tactic
 rule "EmitDebuffMove"
-    salience 10
 when
     Tactic(type == TacticType.DEBUFF_PLAYER)
     not EnemyDecision(priority >= 7)
@@ -91,7 +88,6 @@ end
 
 // L3 — DRAIN tactic
 rule "EmitDrainMove"
-    salience 10
 when
     Tactic(type == TacticType.DRAIN)
     not EnemyDecision(priority >= 7)
@@ -103,7 +99,6 @@ end
 
 // L3 — CONSERVATIVE tactic: pick the lowest-cost move
 rule "EmitConservativeMove"
-    salience 10
 when
     Tactic(type == TacticType.CONSERVATIVE)
     not EnemyDecision(priority >= 6)
@@ -113,4 +108,3 @@ then
     insert(new EnemyDecision($opt.getMoveId(), 6,
             "Conservative (low-resource) tactic: " + $opt.getMoveId()));
 end
-

@@ -3,21 +3,25 @@ package com.example.backend.ai.rules
 import com.example.backend.services.ai.facts.MoveOption;
 import com.example.backend.services.ai.facts.EnemyDecision;
 import com.example.backend.services.ai.facts.Tactic;
+import com.example.backend.services.ai.facts.CantFinishPlayer;
 import com.example.backend.services.ai.TacticType;
 
-// L2 fallback tactic: if no other tactic was chosen, maximize damage
+// L2 fallback tactic: triggered by CantFinishPlayer — fires only after the kill check
+// confirmed no immediate kill is available, and only if no other L2 rule produced a Tactic.
 rule "ChooseFallbackTactic"
     salience 1
 when
+    CantFinishPlayer()
     not Tactic()
 then
     insert(new Tactic(TacticType.MAXIMIZE_DAMAGE));
 end
 
-// L3 ultimate fallback: if no decision was produced, pick the MoveOption with the lowest cost
+// L3 ultimate fallback: triggered by Tactic — fires only after L2 has run
+// and only if no L3 rule produced an EnemyDecision.
 rule "EmitFallbackDecision"
-    salience 1
 when
+    Tactic()
     not EnemyDecision()
     $opt : MoveOption($minCost : costValue)
     not MoveOption(costValue < $minCost)

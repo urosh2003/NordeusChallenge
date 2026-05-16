@@ -8,7 +8,7 @@ import com.example.backend.services.ai.StatComparisonType;
 import com.example.backend.services.ai.ResourceStatusType;
 import com.example.backend.services.ai.Severity;
 
-// High burst reaction: force defensive/control posture before normal tactic selection.
+// High burst reaction: triggered by BurstDamageAssessment inserted by CEP rules.
 rule "ChooseDrainOnHighBurst"
     salience 80
 when
@@ -48,10 +48,11 @@ then
     insert(new Tactic(TacticType.CONSERVATIVE));
 end
 
-// If kill is feasible in near horizon, commit to damage pressure.
+// Triggered by PerceivedThreat(LOW): enemy is healthy, so it can afford to pursue an aggressive finish.
 rule "ChooseFinishSoonTactic"
     salience 60
 when
+    PerceivedThreat(level == ThreatLevel.LOW)
     $p : PlayerFact($hp : currentHp)
     not Tactic()
     ?canKillPlayerInNTurns($hp, 2; )
@@ -59,7 +60,7 @@ then
     insert(new Tactic(TacticType.MAXIMIZE_DAMAGE));
 end
 
-// Universal L2 — stat disadvantage → debuff player
+// Triggered by StatComparison inserted by L1 perception rule DetectStatDisadvantage / DetectMagicThreat.
 rule "ChooseDebuffPlayerTactic"
     salience 50
 when
@@ -71,7 +72,7 @@ then
     insert(new Tactic(TacticType.DEBUFF_PLAYER));
 end
 
-// Universal L2 — resources low → conservative
+// Triggered by ResourceStatus inserted by L1 perception rules.
 rule "ChooseConservativeTactic"
     salience 45
 when
@@ -81,7 +82,7 @@ then
     insert(new Tactic(TacticType.CONSERVATIVE));
 end
 
-// Universal L2 — high threat and DRAIN available → drain
+// Triggered by PerceivedThreat (inserted by archetype-specific L1 template rules).
 rule "ChooseDrainTactic"
     salience 40
 when
@@ -92,11 +93,12 @@ then
     insert(new Tactic(TacticType.DRAIN));
 end
 
-// Universal L2 — safe HP with SELF_BUFF available
+// Triggered by PerceivedThreat(LOW or HIGH): enemy is not critically endangered,
+// so spending a turn on a self-buff is a reasonable investment.
 rule "ChooseSelfBuffTactic"
     salience 35
 when
-    not PerceivedThreat(level == ThreatLevel.CRITICAL)
+    PerceivedThreat(level != ThreatLevel.CRITICAL)
     MoveOption(moveCategory == MoveCategory.SELF_BUFF)
     not Tactic()
 then
