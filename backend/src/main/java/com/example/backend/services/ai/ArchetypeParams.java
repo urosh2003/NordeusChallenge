@@ -1,8 +1,13 @@
 package com.example.backend.services.ai;
 
-public record ArchetypeParams(
-        String name,
-        double criticalHpPct,
-        double retreatHpPct,
-        double aggressionHpPct
-) {}
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class ArchetypeParams {
+    private String archetype;
+    private double criticalHpPct;
+    private double retreatHpPct;
+    private double aggressionHpPct;
+}

@@ -17,6 +17,9 @@ import org.kie.api.runtime.KieSessionConfiguration;
 import org.kie.api.runtime.conf.ClockTypeOption;
 import org.kie.api.runtime.rule.EntryPoint;
 import org.kie.api.time.SessionPseudoClock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -27,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class DroolsEnemyAIService {
+
+    private static final Logger log = LoggerFactory.getLogger("AI.Drools");
 
     private static final Map<String, Archetype> ARCHETYPE_MAP = Map.of(
             "goblinWarrior",  Archetype.PHYSICAL_BRAWLER,
@@ -44,6 +49,9 @@ public class DroolsEnemyAIService {
     private final KieBase kieBase;
     private final MoveRegistry moveRegistry;
 
+    @Value("${ai.drools.log-events:true}")
+    private boolean logEvents;
+
     public DroolsEnemyAIService(KieBase kieBase, MoveRegistry moveRegistry) {
         this.kieBase = kieBase;
         this.moveRegistry = moveRegistry;
@@ -55,9 +63,18 @@ public class DroolsEnemyAIService {
         cfg.setOption(ClockTypeOption.get("pseudo"));
         KieSession session = kieBase.newKieSession(cfg, null);
         try {
+            if (logEvents) {
+                log.info("── pickMove start: enemy={} ({}), player.hp={}/{}",
+                        enemyDefinitionId, enemy.getId(), player.getCurrentHp(), player.getMaxHp());
+                RuleFiringLogger.attach(session);
+            }
             insertFacts(session, state, enemy, player, enemyDefinitionId);
             session.fireAllRules();
-            return bestDecision(session, enemy, player);
+            String selected = bestDecision(session, enemy, player);
+            if (logEvents) {
+                log.info("── pickMove end: selected={}", selected);
+            }
+            return selected;
         } finally {
             session.dispose();
         }

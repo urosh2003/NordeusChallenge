@@ -1,0 +1,36 @@
+template header
+archetype
+criticalHpPct
+aggressionHpPct
+
+package com.example.backend.ai.rules
+
+import com.example.backend.services.ai.facts.EnemyFact;
+import com.example.backend.services.ai.facts.PerceivedThreat;
+import com.example.backend.services.ai.facts.Tactic;
+import com.example.backend.services.ai.Archetype;
+import com.example.backend.services.ai.ThreatLevel;
+import com.example.backend.services.ai.TacticType;
+
+template "archetype-rules"
+
+rule "EvaluateHealthCritical_@{archetype}"
+    salience 100
+when
+    EnemyFact(archetype == Archetype.@{archetype}, hpPercent < @{criticalHpPct})
+    not PerceivedThreat()
+then
+    insert(new PerceivedThreat(ThreatLevel.CRITICAL));
+end
+
+rule "ChooseAggressiveTactic_@{archetype}"
+    salience 50
+when
+    EnemyFact(archetype == Archetype.@{archetype}, hpPercent >= @{aggressionHpPct})
+    not PerceivedThreat(level == ThreatLevel.CRITICAL)
+    not Tactic()
+then
+    insert(new Tactic(TacticType.MAXIMIZE_DAMAGE));
+end
+
+end template

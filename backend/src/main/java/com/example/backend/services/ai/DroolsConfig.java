@@ -1,5 +1,6 @@
 package com.example.backend.services.ai;
 
+import org.drools.template.ObjectDataCompiler;
 import org.kie.api.KieBase;
 import org.kie.api.KieBaseConfiguration;
 import org.kie.api.KieServices;
@@ -14,28 +15,31 @@ import org.springframework.context.annotation.Configuration;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Configuration
 public class DroolsConfig {
 
     // Template data: archetype, criticalHpPct, retreatHpPct, aggressionHpPct
-    private static final ArchetypeParams[] ARCHETYPES = {
+    private static final List<ArchetypeParams> ARCHETYPES = List.of(
             new ArchetypeParams("PHYSICAL_BRAWLER",    0.33, 0.25, 0.50),
             new ArchetypeParams("MAGIC_CASTER",        0.30, 0.30, 0.45),
             new ArchetypeParams("MAGIC_DRAINER",       0.35, 0.35, 0.50),
             new ArchetypeParams("PHYSICAL_SKIRMISHER", 0.30, 0.20, 0.55),
-            new ArchetypeParams("BALANCED_TANK",       0.25, 0.15, 0.35),
-    };
+            new ArchetypeParams("BALANCED_TANK",       0.25, 0.15, 0.35)
+    );
 
     private static final String[] STATIC_DRLS = {
             "drools/level1-perception.drl",
             "drools/accumulate-burst.drl",
             "drools/cep-patterns.drl",
-            "drools/backward-vulnerability.drl",
+            "drools/backward-queries.drl",
             "drools/level2-tactics.drl",
             "drools/level3-action.drl",
             "drools/fallback.drl",
     };
+
+    private static final String ARCHETYPE_TEMPLATE = "drools/archetype-rules.drt";
 
     @Bean
     public KieBase kieBase() throws IOException {
@@ -48,7 +52,7 @@ public class DroolsConfig {
             kfs.write("src/main/resources/" + classpath, content);
         }
 
-        // Template-generated DRL (same rule structure per archetype, different threshold values)
+        // Generate archetype-specific rules from the .drt template using ObjectDataCompiler
         kfs.write("src/main/resources/drools/template-archetypes.drl", generateArchetypeDrl());
 
         String kmoduleXml = """
@@ -82,50 +86,12 @@ public class DroolsConfig {
         }
     }
 
-    /**
-     * Template: generates one L1 HP-perception rule and one L2 aggression rule per archetype.
-     * The threshold values (criticalHpPct, aggressionHpPct) vary per archetype row.
-     * All five rows share the exact same rule structure — this is what Drools templates do.
-     */
-    private String generateArchetypeDrl() {
-        StringBuilder drl = new StringBuilder();
-        drl.append("package com.example.backend.ai.rules\n\n");
-        drl.append("import com.example.backend.services.ai.facts.EnemyFact;\n");
-        drl.append("import com.example.backend.services.ai.facts.PerceivedThreat;\n");
-        drl.append("import com.example.backend.services.ai.facts.Tactic;\n");
-        drl.append("import com.example.backend.services.ai.Archetype;\n");
-        drl.append("import com.example.backend.services.ai.ThreatLevel;\n");
-        drl.append("import com.example.backend.services.ai.TacticType;\n\n");
-
-        for (ArchetypeParams a : ARCHETYPES) {
-            // L1: HP perception — archetype-specific critical threshold
-            drl.append(String.format("""
-                    rule "EvaluateHealthCritical_%s"
-                        salience 100
-                    when
-                        EnemyFact(archetype == Archetype.%s, hpPercent < %s)
-                        not PerceivedThreat()
-                    then
-                        insert(new PerceivedThreat(ThreatLevel.CRITICAL));
-                    end
-
-                    """, a.name(), a.name(), a.criticalHpPct()));
-
-            // L2: Aggressive tactic — archetype-specific aggression threshold
-            drl.append(String.format("""
-                    rule "ChooseAggressiveTactic_%s"
-                        salience 50
-                    when
-                        EnemyFact(archetype == Archetype.%s, hpPercent >= %s)
-                        not PerceivedThreat(level == ThreatLevel.CRITICAL)
-                        not Tactic()
-                    then
-                        insert(new Tactic(TacticType.MAXIMIZE_DAMAGE));
-                    end
-
-                    """, a.name(), a.name(), a.aggressionHpPct()));
+    // Drools template engine compiles archetype-rules.drt against the ARCHETYPES list,
+    // producing one EvaluateHealthCritical_<X> + ChooseAggressiveTactic_<X> pair per row.
+    private String generateArchetypeDrl() throws IOException {
+        try (InputStream template = getClass().getClassLoader().getResourceAsStream(ARCHETYPE_TEMPLATE)) {
+            if (template == null) throw new IOException("Template not found: " + ARCHETYPE_TEMPLATE);
+            return new ObjectDataCompiler().compile(ARCHETYPES, template);
         }
-
-        return drl.toString();
     }
 }

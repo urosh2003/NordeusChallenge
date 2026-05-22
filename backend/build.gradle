@@ -39,6 +39,7 @@ dependencies {
     implementation 'org.drools:drools-core:9.44.0.Final'
     implementation 'org.drools:drools-mvel:9.44.0.Final'
     implementation 'org.drools:drools-xml-support:9.44.0.Final'
+    implementation 'org.drools:drools-templates:9.44.0.Final'
 }
 
 tasks.named('test') {

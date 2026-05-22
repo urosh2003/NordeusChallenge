@@ -1,0 +1,256 @@
+@startuml CombatAI
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty members
+
+' ─────────────────────────────────────────────────────────────────────
+' ENUMERACIJE
+' ─────────────────────────────────────────────────────────────────────
+package "com.example.backend.services.ai" <<Folder>> {
+
+    enum Archetype {
+        PHYSICAL_BRAWLER
+        MAGIC_CASTER
+        MAGIC_DRAINER
+        PHYSICAL_SKIRMISHER
+        BALANCED_TANK
+    }
+
+    enum ThreatLevel {
+        LOW
+        MEDIUM
+        HIGH
+        CRITICAL
+    }
+
+    enum TacticType {
+        MAXIMIZE_DAMAGE
+        SELF_BUFF
+        DEBUFF_PLAYER
+        CONSERVATIVE
+        DRAIN
+    }
+
+    enum MoveCategory {
+        DAMAGE_PHYSICAL
+        DAMAGE_MAGIC
+        HEAL
+        SELF_BUFF
+        ENEMY_DEBUFF
+        DRAIN
+    }
+
+    enum Severity {
+        LOW
+        MEDIUM
+        HIGH
+    }
+
+    enum StatComparisonType {
+        PLAYER_PHYSICAL_DOMINATES
+        PLAYER_MAGIC_DOMINATES
+    }
+
+    enum BehaviorType {
+        PHYSICAL_SPAMMER
+        COMBO_PLAYER
+    }
+
+    enum ResourceStatusType {
+        STARVED
+    }
+
+    ' ─── Template parametri ───
+    class ArchetypeParams <<@Data>> {
+        - archetype : String
+        - criticalHpPct : double
+        - retreatHpPct : double
+        - aggressionHpPct : double
+    }
+
+    ' ─── Servisi ───
+    class EnemyAIService <<@Service>> {
+        - drools : DroolsEnemyAIService
+        + pickMove(state, enemy, player, defId) : String
+    }
+
+    class DroolsEnemyAIService <<@Service>> {
+        - {static} ARCHETYPE_MAP : Map<String, Archetype>
+        - kieBase : KieBase
+        - moveRegistry : MoveRegistry
+        + pickMove(state, enemy, player, defId) : String
+        - insertFacts(session, state, enemy, player, defId)
+        - canAfford(def, actor) : boolean
+        - categorize(def) : MoveCategory
+        - projectedValue(def, actor, target) : int
+        - bestDecision(session, enemy, player) : String
+    }
+
+    class DroolsConfig <<@Configuration>> {
+        - {static} ARCHETYPES : List<ArchetypeParams>
+        - {static} STATIC_DRLS : String[]
+        - {static} ARCHETYPE_TEMPLATE : String
+        + kieBase() : KieBase
+        - generateArchetypeDrl() : String
+        - loadClasspathText(path) : String
+    }
+}
+
+' ─────────────────────────────────────────────────────────────────────
+' ČINJENICE — Drools facts
+' ─────────────────────────────────────────────────────────────────────
+package "com.example.backend.services.ai.facts" <<Folder>> {
+
+    ' ─── Ulazne činjenice ───
+    class EnemyFact <<@Data>> {
+        - id : String
+        - archetype : Archetype
+        - hpPercent : double
+        - currentStamina : int
+        - maxStamina : int
+        - currentMana : int
+        - maxMana : int
+        - maxHp : int
+        - attack : int
+        - defense : int
+        - magic : int
+    }
+
+    class PlayerFact <<@Data>> {
+        - currentHp : int
+        - maxHp : int
+        - attack : int
+        - defense : int
+        - magic : int
+    }
+
+    class MoveOption <<@Data>> {
+        - moveId : String
+        - moveCategory : MoveCategory
+        - costType : String
+        - costValue : int
+        - projectedValue : int
+    }
+
+    class ActiveStatusEffect <<@Data>> {
+        - target : String
+        - statType : String
+        - value : int
+    }
+
+    class CombatEventFact <<@Role(EVENT)>> {
+        - type : String
+        - source : String
+        - target : String
+        - moveCategory : MoveCategory
+        - amount : int
+        - turnTimestamp : long << @Timestamp >>
+    }
+
+    ' ─── Izvedene činjenice (L1) ───
+    class CantFinishPlayer <<marker>> {
+    }
+
+    class PerceivedThreat <<@Data>> {
+        - level : ThreatLevel
+    }
+
+    class ResourceStatus <<@Data>> {
+        - type : ResourceStatusType
+        - resourceName : String
+    }
+
+    class StatComparison <<@Data>> {
+        - type : StatComparisonType
+    }
+
+    ' ─── Izvedene činjenice (CEP) ───
+    class BurstDamageAssessment <<@Data>> {
+        - total : int
+        - severity : Severity
+    }
+
+    class PlayerBehaviorProfile <<@Data>> {
+        - type : BehaviorType
+    }
+
+    ' ─── Izvedene činjenice (L2) ───
+    class Tactic <<@Data>> {
+        - type : TacticType
+    }
+
+    ' ─── Izlazna činjenica (L3) ───
+    class EnemyDecision <<@Data>> {
+        - moveId : String
+        - priority : int
+        - reasoning : String
+    }
+}
+
+' ─────────────────────────────────────────────────────────────────────
+' EKSTERNE ZAVISNOSTI (nisu deo AI paketa)
+' ─────────────────────────────────────────────────────────────────────
+package "external" <<Frame>> {
+    interface KieBase
+    class CombatState
+    class Character
+    class MoveRegistry
+    class CombatService
+}
+
+' ─────────────────────────────────────────────────────────────────────
+' RELACIJE
+' ─────────────────────────────────────────────────────────────────────
+
+' Servisni lanac
+CombatService ..> EnemyAIService : poziva
+EnemyAIService o--> DroolsEnemyAIService : delegira
+
+' Drools infrastruktura
+DroolsConfig ..> KieBase : << @Bean >>
+DroolsConfig o--> "1..*" ArchetypeParams : ARCHETYPES
+DroolsEnemyAIService o--> KieBase
+DroolsEnemyAIService o--> MoveRegistry
+DroolsEnemyAIService ..> Archetype : ARCHETYPE_MAP
+
+' DroolsEnemyAIService gradi sve ulazne činjenice
+DroolsEnemyAIService ..> EnemyFact : << insert >>
+DroolsEnemyAIService ..> PlayerFact : << insert >>
+DroolsEnemyAIService ..> MoveOption : << insert >>
+DroolsEnemyAIService ..> ActiveStatusEffect : << insert >>
+DroolsEnemyAIService ..> CombatEventFact : << insert >>
+DroolsEnemyAIService ..> EnemyDecision : << read >>
+DroolsEnemyAIService ..> CombatState
+DroolsEnemyAIService ..> Character
+
+' Činjenice → enumeracije
+EnemyFact --> Archetype
+MoveOption --> MoveCategory
+CombatEventFact --> MoveCategory
+PerceivedThreat --> ThreatLevel
+ResourceStatus --> ResourceStatusType
+StatComparison --> StatComparisonType
+BurstDamageAssessment --> Severity
+PlayerBehaviorProfile --> BehaviorType
+Tactic --> TacticType
+
+' ─────────────────────────────────────────────────────────────────────
+' LEGENDA — tok zaključivanja (forward chaining kaskada)
+' ─────────────────────────────────────────────────────────────────────
+note bottom of EnemyDecision
+  **Kaskada pravila** (forward chaining):
+   1. EnemyFact + MoveOption + PlayerFact (ulaz)
+   2. ConfirmNoImmediateKill → CantFinishPlayer
+   3. L1 percepcija → PerceivedThreat, ResourceStatus, StatComparison
+   4. CEP → BurstDamageAssessment, PlayerBehaviorProfile
+   5. L2 taktika → Tactic
+   6. L3 akcija → **EnemyDecision** (izlaz)
+
+  **Backward chaining** query-ji (definisani u DRL-u):
+   • canKillPlayer(playerHp)
+   • canKillPlayerInNTurns(hp, mana, stamina, n)
+   • isVulnerableTo(entityId, damageType)
+end note
+
+@enduml

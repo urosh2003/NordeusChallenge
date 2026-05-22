@@ -6,11 +6,6 @@ import com.example.backend.services.ai.facts.CantFinishPlayer;
 import com.example.backend.services.ai.BehaviorType;
 import com.example.backend.services.ai.MoveCategory;
 
-declare CombatEventFact
-    @role(event)
-    @timestamp(turnTimestamp)
-end
-
 declare entry-point "combat-stream"
 end
 

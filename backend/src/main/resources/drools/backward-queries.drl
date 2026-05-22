@@ -1,0 +1,58 @@
+package com.example.backend.ai.rules
+
+import com.example.backend.services.ai.facts.ActiveStatusEffect;
+import com.example.backend.services.ai.facts.PlayerFact;
+import com.example.backend.services.ai.facts.EnemyFact;
+import com.example.backend.services.ai.facts.MoveOption;
+
+function boolean canAfford(String t, int c, int m, int s) {
+    return ("mana".equals(t)    && m >= c)
+        || ("stamina".equals(t) && s >= c)
+        ||  "health".equals(t)
+        ||  "none".equals(t);
+}
+function int manaCost(String t, int c)    { return "mana".equals(t)    ? c : 0; }
+function int staminaCost(String t, int c) { return "stamina".equals(t) ? c : 0; }
+function int regenClamp(int v, int max)   { return Math.max(0, Math.min(max, v)); }
+
+// Backward query: is the given entity vulnerable to physical damage?
+// Fires when the target has an active defense debuff OR an inherently low defense stat (<= 4).
+query "isVulnerableTo"(String entityId, String damageType)
+    // Physical: active defense debuff
+    ActiveStatusEffect(target == entityId, statType == "defense", value < 0)
+    eval("physical".equals(damageType))
+  or
+    // Physical: player has inherently low defense
+    PlayerFact(defense <= 4)
+    eval("player".equals(entityId) && "physical".equals(damageType))
+  or
+    // Physical: enemy has inherently low defense
+    EnemyFact(id == entityId, defense <= 4)
+    eval("physical".equals(damageType))
+end
+
+// Backward query: can enemy kill the player this turn with one move?
+query "canKillPlayer"(int playerHp)
+    MoveOption(projectedValue >= playerHp)
+end
+
+// Backward chaining query: can enemy kill the player in N turns?
+// (reduce player HP, subtract cost, add passive regen for the next turn) and recurse.
+// EnemyFact pattern supplies invariant constants (magic, attack, maxMana, maxStamina).
+query "canKillPlayerInNTurns"(int playerHp, int enemyMana, int enemyStamina, int turnsLeft)
+    // Base case: player already defeated
+    eval(playerHp <= 0)
+  or
+    // Recursive: a damaging affordable move exists, and after applying it
+    // (with regen for the next turn) the goal is reachable in N-1 turns
+    eval(turnsLeft > 0 && playerHp > 0)
+    $e : EnemyFact($mag : magic, $att : attack, $maxM : maxMana, $maxS : maxStamina)
+    $m : MoveOption($dmg : projectedValue, $cost : costValue, $costType : costType,
+                    projectedValue > 0)
+    eval(canAfford($costType, $cost, enemyMana, enemyStamina))
+    ?canKillPlayerInNTurns(
+        playerHp - $dmg,
+        regenClamp(enemyMana    - manaCost($costType, $cost)    + $mag, $maxM),
+        regenClamp(enemyStamina - staminaCost($costType, $cost) + $att, $maxS),
+        turnsLeft - 1; )
+end

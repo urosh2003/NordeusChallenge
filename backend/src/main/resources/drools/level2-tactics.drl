@@ -54,8 +54,9 @@ rule "ChooseFinishSoonTactic"
 when
     PerceivedThreat(level == ThreatLevel.LOW)
     $p : PlayerFact($hp : currentHp)
+    $e : EnemyFact($em : currentMana, $es : currentStamina)
     not Tactic()
-    ?canKillPlayerInNTurns($hp, 2; )
+    ?canKillPlayerInNTurns($hp, $em, $es, 3; )
 then
     insert(new Tactic(TacticType.MAXIMIZE_DAMAGE));
 end
@@ -73,11 +74,15 @@ then
 end
 
 // Triggered by ResourceStatus inserted by L1 perception rules.
+// Blocked when a 3-turn kill path is available: don't conserve resources if we can finish the fight.
 rule "ChooseConservativeTactic"
     salience 45
 when
     ResourceStatus(type == ResourceStatusType.STARVED)
+    $p : PlayerFact($hp : currentHp)
+    $e : EnemyFact($em : currentMana, $es : currentStamina)
     not Tactic()
+    not ?canKillPlayerInNTurns($hp, $em, $es, 3; )
 then
     insert(new Tactic(TacticType.CONSERVATIVE));
 end
