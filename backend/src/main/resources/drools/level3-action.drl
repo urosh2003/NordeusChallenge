@@ -21,12 +21,14 @@ end
 
 // All remaining L3 rules are triggered by Tactic inserted by L2.
 
-// L3 — MAXIMIZE_DAMAGE: prefer vulnerable damage type if player has a debuff active
+// L3 — MAXIMIZE_DAMAGE: prefer physical damage when player is physically vulnerable.
+// (No magic-vulnerable variant: the game has no magic resistance, so vulnerability
+// only meaningfully applies to physical damage.)
 rule "EmitMaximizeDamagePhysicalVulnerable"
 when
     Tactic(type == TacticType.MAXIMIZE_DAMAGE)
     not EnemyDecision(priority >= 10)
-    ?isVulnerableTo("player", "physical"; )
+    ?isVulnerableToPhysical("player"; )
     $best : MoveOption(moveCategory == MoveCategory.DAMAGE_PHYSICAL, $val : projectedValue)
     not MoveOption(moveCategory == MoveCategory.DAMAGE_PHYSICAL, projectedValue > $val)
 then
@@ -34,31 +36,14 @@ then
             "Player vulnerable to physical; maximize: " + $best.getMoveId()));
 end
 
-rule "EmitMaximizeDamageMagicVulnerable"
-when
-    Tactic(type == TacticType.MAXIMIZE_DAMAGE)
-    not EnemyDecision(priority >= 10)
-    ?isVulnerableTo("player", "magical"; )
-    $best : MoveOption(moveCategory == MoveCategory.DAMAGE_MAGIC, $val : projectedValue)
-    not MoveOption(moveCategory == MoveCategory.DAMAGE_MAGIC, projectedValue > $val)
-then
-    insert(new EnemyDecision($best.getMoveId(), 10,
-            "Player vulnerable to magic; maximize: " + $best.getMoveId()));
-end
-
-// L3 — MAXIMIZE_DAMAGE: no specific vulnerability; pick highest-value damage move
+// L3 — MAXIMIZE_DAMAGE: no specific vulnerability; pick highest-value HP-damaging move.
+// dealsDamage covers both pure damage moves and health-stealing drains.
 rule "EmitMaximizeDamageAny"
 when
     Tactic(type == TacticType.MAXIMIZE_DAMAGE)
     not EnemyDecision(priority >= 9)
-    $best : MoveOption(
-        (moveCategory == MoveCategory.DAMAGE_PHYSICAL || moveCategory == MoveCategory.DAMAGE_MAGIC),
-        $val : projectedValue
-    )
-    not MoveOption(
-        (moveCategory == MoveCategory.DAMAGE_PHYSICAL || moveCategory == MoveCategory.DAMAGE_MAGIC),
-        projectedValue > $val
-    )
+    $best : MoveOption(dealsDamage == true, $val : projectedValue)
+    not MoveOption(dealsDamage == true, projectedValue > $val)
 then
     insert(new EnemyDecision($best.getMoveId(), 9,
             "Maximize damage output: " + $best.getMoveId()));

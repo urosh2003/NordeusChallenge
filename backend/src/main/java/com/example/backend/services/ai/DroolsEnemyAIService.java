@@ -2,6 +2,7 @@ package com.example.backend.services.ai;
 
 import com.example.backend.services.ai.facts.*;
 import com.example.backend.models.combats.CombatEvent;
+import com.example.backend.models.combats.CombatEventType;
 import com.example.backend.models.moves.MoveDefinition;
 import com.example.backend.services.moves.MoveRegistry;
 import com.example.backend.models.characters.Character;
@@ -122,6 +123,7 @@ public class DroolsEnemyAIService {
             mo.setCostType(def.getCost().getCostType().name());
             mo.setCostValue(def.getCost().getCostValue());
             mo.setProjectedValue(projectedValue(def, enemy, player));
+            mo.setDealsDamage(dealsDamage(def));
             session.insert(mo);
         }
 
@@ -130,42 +132,46 @@ public class DroolsEnemyAIService {
         insertStatusEffects(session, enemy.getId(), enemy.getActiveEffects());
 
         // Combat history → event stream
+        // Only MOVE_USED and DAMAGE_DEALT are streamed; turnTimestamp is the turn counter
+        // (advanced on TURN_CHANGED) so CEP windows reason in turns, not raw event indices.
         List<CombatEvent> history = state.getEventHistory();
         EntryPoint stream = session.getEntryPoint("combat-stream");
         SessionPseudoClock clock = session.getSessionClock();
 
-        String currentSource = null;
-        for (int i = 0; i < history.size(); i++) {
-            CombatEvent ev = history.get(i);
-            if (ev.getType() == null) continue;
-            clock.advanceTime(1, TimeUnit.MILLISECONDS);
+        int currentTurn = 0;
+        for (CombatEvent ev : history) {
+            CombatEventType type = ev.getType();
+            if (type == null) continue;
+
+            if (type == CombatEventType.TURN_CHANGED) {
+                currentTurn++;
+                clock.advanceTime(1, TimeUnit.MILLISECONDS);
+                continue;
+            }
+
+            if (type != CombatEventType.MOVE_USED && type != CombatEventType.DAMAGE_DEALT) {
+                continue;
+            }
 
             CombatEventFact fact = new CombatEventFact();
-            fact.setType(ev.getType().name());
-            fact.setTurnTimestamp(i);
+            fact.setType(type.name());
+            fact.setTurnTimestamp(currentTurn);
 
             Map<String, Object> payload = ev.getPayload();
-            switch (ev.getType()) {
-                case MOVE_USED -> {
-                    currentSource = (String) payload.get("actorId");
-                    fact.setSource(currentSource);
-                    fact.setTarget((String) payload.get("targetId"));
-                    String moveId = (String) payload.get("moveId");
-                    if (moveId != null) {
-                        MoveDefinition def = safeGetDefinition(moveId);
-                        if (def != null) fact.setMoveCategory(categorize(def));
-                    }
+            if (type == CombatEventType.MOVE_USED) {
+                fact.setSource((String) payload.get("actorId"));
+                fact.setTarget((String) payload.get("targetId"));
+                String moveId = (String) payload.get("moveId");
+                if (moveId != null) {
+                    MoveDefinition def = safeGetDefinition(moveId);
+                    if (def != null) fact.setMoveCategory(categorize(def));
                 }
-                case DAMAGE_DEALT -> {
-                    fact.setSource(currentSource);
-                    fact.setTarget((String) payload.get("targetId"));
-                    Object amt = payload.get("amount");
-                    if (amt instanceof Number n) fact.setAmount(n.intValue());
-                }
-                default -> {
-                    fact.setSource(currentSource);
-                    fact.setTarget((String) payload.get("targetId"));
-                }
+            } else { // DAMAGE_DEALT — 1v1: source is whichever character isn't the target
+                String targetId = (String) payload.get("targetId");
+                fact.setTarget(targetId);
+                fact.setSource(enemy.getId().equals(targetId) ? "player" : enemy.getId());
+                Object amt = payload.get("amount");
+                if (amt instanceof Number n) fact.setAmount(n.intValue());
             }
             stream.insert(fact);
         }
@@ -193,6 +199,17 @@ public class DroolsEnemyAIService {
             case health  -> actor.getCurrentHp()      >  def.getCost().getCostValue();
             case none    -> true;
         };
+    }
+
+    // A move "deals damage" if it has any damage effect, or a steal effect targeting health.
+    // Health-stealing moves (drainLife etc.) deduct HP from the target — functionally damage.
+    private boolean dealsDamage(MoveDefinition def) {
+        for (MoveDefinition.MainEffectDef e : def.getMainEffects()) {
+            if (e.getType() == MoveDefinition.MainEffectType.damage) return true;
+            if (e.getType() == MoveDefinition.MainEffectType.steal
+                    && e.getResource() == MoveDefinition.ResourceType.health) return true;
+        }
+        return false;
     }
 
     private MoveCategory categorize(MoveDefinition def) {

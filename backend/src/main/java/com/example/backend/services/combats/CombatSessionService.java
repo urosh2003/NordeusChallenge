@@ -99,7 +99,6 @@ public class CombatSessionService {
             throw new InvalidMoveException("Player does not know move: " + moveId);
 
         List<CombatEvent> events = new ArrayList<>(combatService.executeMove(state, player, enemy, moveId));
-        state.appendHistory(events);
 
         PlayerState playerState = playerService.getOrCreatePlayerState(combat.getRunId());
         PlayerStateResponse playerStateResponse = playerService.buildPlayerStateResponse(playerState);
@@ -120,6 +119,8 @@ public class CombatSessionService {
             }
         }
 
+        // Append after TURN_CHANGED is in events so Drools sees turn boundaries
+        state.appendHistory(events);
         combat.setState(state);
         repo.save(combat);
         String currentTurn = combat.getStatus() == CombatStatus.ACTIVE ? combat.getCurrentTurn().name() : null;
@@ -185,7 +186,6 @@ public class CombatSessionService {
                     .with("failedMoveId", pickedMove)
                     .with("reason", "cannot_execute_move"));
         }
-        state.appendHistory(events);
 
         PlayerState playerState = playerService.getOrCreatePlayerState(combat.getRunId());
 
@@ -220,6 +220,8 @@ public class CombatSessionService {
             }
         }
 
+        // Append after TURN_CHANGED is in events so Drools sees turn boundaries
+        state.appendHistory(events);
         combat.setState(state);
         repo.save(combat);
         String currentTurn = combat.getStatus() == CombatStatus.ACTIVE ? combat.getCurrentTurn().name() : null;

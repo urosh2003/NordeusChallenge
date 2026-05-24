@@ -17,18 +17,14 @@ function int regenClamp(int v, int max)   { return Math.max(0, Math.min(max, v))
 
 // Backward query: is the given entity vulnerable to physical damage?
 // Fires when the target has an active defense debuff OR an inherently low defense stat (<= 4).
-query "isVulnerableTo"(String entityId, String damageType)
-    // Physical: active defense debuff
+// Physical-only: the game has no magic resistance, so magical vulnerability isn't modelled.
+query "isVulnerableToPhysical"(String entityId)
     ActiveStatusEffect(target == entityId, statType == "defense", value < 0)
-    eval("physical".equals(damageType))
   or
-    // Physical: player has inherently low defense
     PlayerFact(defense <= 4)
-    eval("player".equals(entityId) && "physical".equals(damageType))
+    eval("player".equals(entityId))
   or
-    // Physical: enemy has inherently low defense
     EnemyFact(id == entityId, defense <= 4)
-    eval("physical".equals(damageType))
 end
 
 // Backward query: can enemy kill the player this turn with one move?

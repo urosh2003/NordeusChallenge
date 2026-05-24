@@ -14,7 +14,8 @@
       "PowerShell(Get-ChildItem -Path F:\\\\NordeusChallenge\\\\backend\\\\src\\\\main\\\\java\\\\com\\\\example\\\\backend -Recurse -File | Where-Object {$_.Extension -eq \".java\"} | Measure-Object)",
       "Read(//f/NordeusChallenge/**)",
       "WebSearch",
-      "Bash(dir F:NordeusChallenge *)"
+      "Bash(dir F:NordeusChallenge *)",
+      "Bash(./gradlew compileJava --console=plain)"
     ]
   }
 }

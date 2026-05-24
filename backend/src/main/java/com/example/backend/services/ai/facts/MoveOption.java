@@ -12,4 +12,5 @@ public class MoveOption {
     private String costType;
     private int costValue;
     private int projectedValue;
+    private boolean dealsDamage;
 }

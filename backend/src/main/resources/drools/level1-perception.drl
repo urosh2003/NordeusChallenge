@@ -88,9 +88,7 @@ end
 rule "DetectMagicThreat"
 when
     CantFinishPlayer()
-    $p : PlayerFact($pm : magic)
-    $e : EnemyFact($em : magic)
-    eval($pm > $em * 1.3)
+    PlayerFact(magic >= 8)
     not StatComparison(type == StatComparisonType.PLAYER_MAGIC_DOMINATES)
 then
     insert(new StatComparison(StatComparisonType.PLAYER_MAGIC_DOMINATES));

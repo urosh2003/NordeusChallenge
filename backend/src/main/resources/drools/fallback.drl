@@ -6,10 +6,11 @@ import com.example.backend.services.ai.facts.Tactic;
 import com.example.backend.services.ai.facts.CantFinishPlayer;
 import com.example.backend.services.ai.TacticType;
 
-// L2 fallback tactic: triggered by CantFinishPlayer — fires only after the kill check
-// confirmed no immediate kill is available, and only if no other L2 rule produced a Tactic.
+// L2 fallback tactic: fires last so L1 perception (default salience) and L2 tactics
+// (salience 35–80) all get a chance first. Negative salience ensures this rule only
+// activates when nothing else has produced a Tactic.
 rule "ChooseFallbackTactic"
-    salience 1
+    salience -10
 when
     CantFinishPlayer()
     not Tactic()
@@ -17,9 +18,9 @@ then
     insert(new Tactic(TacticType.MAXIMIZE_DAMAGE));
 end
 
-// L3 ultimate fallback: triggered by Tactic — fires only after L2 has run
-// and only if no L3 rule produced an EnemyDecision.
+// L3 ultimate fallback: same idea — fires after every L3 rule has had a chance.
 rule "EmitFallbackDecision"
+    salience -10
 when
     Tactic()
     not EnemyDecision()

@@ -6,7 +6,10 @@ import com.example.backend.services.ai.facts.BurstDamageAssessment;
 import com.example.backend.services.ai.facts.CantFinishPlayer;
 import com.example.backend.services.ai.Severity;
 
-// Accumulate: sum player damage dealt to enemy over last 3 events (window:length)
+// Accumulate: sum player damage dealt to enemy over the last ~3 player turns.
+// window:time(6ms) — turnTimestamp is in turn units (1ms per TURN_CHANGED), and
+// player/enemy alternate, so 6 turn-units covers roughly the last 3 player turns
+// regardless of whether each turn dealt damage.
 rule "AssessBurstDamageRisk"
 when
     CantFinishPlayer()
@@ -16,7 +19,7 @@ when
         CombatEventFact(type == "DAMAGE_DEALT",
                         source == "player",
                         $amount : amount)
-        over window:length(3)
+        over window:time( 6ms )
         from entry-point "combat-stream",
         sum($amount)
     )
