@@ -47,9 +47,9 @@ Za svaki potez neprijatelja sistem prima sledeće **ulazne činjenice** koje se 
 |-----------|-------|---------|
 | `EnemyFact` | id, archetype, maxHp, hpPercent, currentStamina, maxStamina, currentMana, maxMana, attack, defense, magic | Kompletno stanje neprijatelja, uključujući arhitip i sve statistike |
 | `PlayerFact` | currentHp, maxHp, attack, defense, magic | Kompletno stanje igrača |
-| `MoveOption` | moveId, moveCategory, costType, costValue, projectedValue | Jedan zapis po svakom potez koji neprijatelj može priuštiti; `projectedValue` je unapred izračunata procenjena šteta |
+| `MoveOption` | moveId, moveCategory, costType, costValue, projectedValue, dealsDamage | Jedan zapis po svakom potezu koji neprijatelj može priuštiti; `projectedValue` je unapred izračunata procenjena šteta; `dealsDamage` je `true` za prave `damage` efekte i za `steal` efekte koji ciljaju `resource: health` (jer steal po HP-u funkcionalno **jeste** šteta) |
 | `ActiveStatusEffect` | target (entityId), statType, value | Aktivan status efekat na igraču ili neprijatelju (negativna vrednost = debuff) |
-| `CombatEventFact` | type, source, target, moveCategory, amount, turnTimestamp | Događaj iz istorije borbe, unet u CEP entry-point `"combat-stream"` kao `@role(event)` |
+| `CombatEventFact` | type, source, target, moveCategory, amount, turnTimestamp | Događaj iz istorije borbe, unet u CEP entry-point `"combat-stream"` kao `@role(event)`. **Filtrira se na ulazu** — samo `MOVE_USED` i `DAMAGE_DEALT` se ubacuju u stream; ostali događaji (`RESOURCE_SPENT`, `STATUS_EFFECT_APPLIED`, `HEAL_RECEIVED`, …) se preskaču. **`turnTimestamp` je broj poteza**: brojač se inkrementira na svaki `TURN_CHANGED` događaj iz istorije, pa svi događaji u istom potezu dele isti timestamp. `SessionPseudoClock` napreduje 1ms po `TURN_CHANGED`-u, čime se CEP prozori (`window:time(Nms)`, `this after[0ms, Nms]`) izračunavaju u jedinicama poteza, ne u broju događaja. Pošto je borba uvek 1v1, `source` za `DAMAGE_DEALT` se izvodi iz `target`-a (suprotni karakter) jer engine sam ne piše `actorId` na te događaje |
 
 **Izvedene činjenice** koje sistem sam generiše primenom pravila:
 
@@ -89,20 +89,32 @@ Iz skupa svih generisanih odluka bira se ona sa najvišim prioritetom i vraća `
 | `EvaluateResourceStaminaStarved` | `CantFinishPlayer()` + stamina < 20% maksimuma | INSERT `ResourceStatus(STARVED, "stamina")` |
 | `EvaluateResourceManaStarved` | `CantFinishPlayer()` + mana < 20% maksimuma | INSERT `ResourceStatus(STARVED, "mana")` |
 | `DetectStatDisadvantage` | `CantFinishPlayer()` + player.attack − enemy.defense > 5 | INSERT `StatComparison(PLAYER_PHYSICAL_DOMINATES)` |
-| `DetectMagicThreat` | `CantFinishPlayer()` + player.magic > enemy.magic × 1.3 | INSERT `StatComparison(PLAYER_MAGIC_DOMINATES)` |
+| `DetectMagicThreat` | `CantFinishPlayer()` + `PlayerFact(magic >= 8)` | INSERT `StatComparison(PLAYER_MAGIC_DOMINATES)` |
 
 #### `accumulate-burst.drl` — CEP akumulacija
 
 | Pravilo | Uslov | Akcija |
 |---------|-------|--------|
-| `AssessBurstDamageRisk` | `CantFinishPlayer()` + Zbir player `DAMAGE_DEALT` u poslednjih 3 događaja > 35% neprijateljevog maxHp | INSERT `BurstDamageAssessment(total, HIGH)` |
+| `AssessBurstDamageRisk` | `CantFinishPlayer()` + Zbir player `DAMAGE_DEALT` u **poslednjih ~3 poteza igrača** (`window:time(6ms)` — pošto se igrač i neprijatelj smenjuju, 6 jedinica vremena pokriva otprilike 3 poteza igrača) > 35% neprijateljevog maxHp | INSERT `BurstDamageAssessment(total, HIGH)` |
+
+**Zašto `window:time` umesto `window:length`?** Burst pravilo nas zanima u smislu *poslednjih N poteza*, bez obzira da li je igrač u nekom potezu uopšte naneo štetu. `window:length(N)` bi gledao samo poslednjih N `DAMAGE_DEALT` događaja — što za potez bez napada ne bi „resetovalo" stari burst iz pre nekoliko poteza. `window:time(6ms)` u kombinaciji sa `turnTimestamp` koji je u jedinicama poteza daje pravi vremenski prozor.
 
 #### `cep-patterns.drl` — CEP obrasci ponašanja
 
 | Pravilo | Uslov | Akcija |
 |---------|-------|--------|
-| `DetectPlayerPhysicalSpammer` | `CantFinishPlayer()` + Igrač koristio `DAMAGE_PHYSICAL` ≥ 3 puta u poslednjih 4 `MOVE_USED` događaja (`window:length(4)`) | INSERT `PlayerBehaviorProfile(PHYSICAL_SPAMMER)` |
-| `DetectPlayerComboSetup` | `CantFinishPlayer()` + Igrač koristio `ENEMY_DEBUFF` pa odmah zatim napad (`after[0,4]`) | INSERT `PlayerBehaviorProfile(COMBO_PLAYER)` |
+| `DetectPlayerPhysicalSpammer` | `CantFinishPlayer()` + Igrač koristio `DAMAGE_PHYSICAL` ≥ 3 puta u poslednjih 4 odgovarajuća `MOVE_USED` događaja (`window:length(4)`) | INSERT `PlayerBehaviorProfile(PHYSICAL_SPAMMER)` |
+| `DetectPlayerComboSetup` | `CantFinishPlayer()` + Igrač koristio `ENEMY_DEBUFF` pa zatim napad u narednih do 2 poteza (`this after[0ms, 2ms]`) | INSERT `PlayerBehaviorProfile(COMBO_PLAYER)` |
+
+**Trojni mehanizam temporalnog rezonovanja u CEP-u:**
+
+| Mehanizam | Šta meri | Gde se koristi |
+|-----------|----------|----------------|
+| `over window:length(N)` | Poslednjih N događaja **koji odgovaraju pattern-u** (count-based, vreme ne učestvuje) | `DetectPlayerPhysicalSpammer` — interesuje nas broj fizičkih napada, ne vreme |
+| `over window:time(N ms)` | Događaji koji odgovaraju pattern-u, čiji `@Timestamp` je unutar poslednjih N jedinica vremena u odnosu na sat sesije | `AssessBurstDamageRisk` — interesuje nas vremenski prozor (poslednjih ~3 poteza) |
+| `this after[lower, upper] $e1` | **Uređena relacija** između dva specifična događaja: drugi se desio između `lower` i `upper` jedinica vremena nakon prvog | `DetectPlayerComboSetup` — debuff *pa onda* napad (redosled bitan) |
+
+Window operacije agregiraju skup događaja (count/sum/avg), `this after` izražava sekvencu A-pa-B i ne može se zameniti prozorom.
 
 #### `backward-queries.drl` — Queryji
 
@@ -113,7 +125,7 @@ Ovi queryji su obični Drools predikati nad radnom memorijom — jednoslojna dis
 | Upit | Parametri | Dokazuje |
 |------|-----------|----------|
 | `canKillPlayer` | playerHp | Postoji `MoveOption` čiji `projectedValue >= playerHp` |
-| `isVulnerableTo` | entityId, damageType | Za `damageType == "physical"`: entitet ima aktivan defense debuff (`ActiveStatusEffect`) ILI urođeno nisku odbranu (`defense <= 4`). Tri OR grane razlikuju izvor podatka: status efekat, `PlayerFact` ili `EnemyFact`. |
+| `isVulnerableToPhysical` | entityId | Entitet ima aktivan defense debuff (`ActiveStatusEffect`) ILI urođeno nisku odbranu (`defense <= 4`). Tri OR grane razlikuju izvor podatka: status efekat, `PlayerFact` ili `EnemyFact`. Query je samo za fizičku ranjivost — magijska otpornost u igri ne postoji, pa magijska ranjivost ne bi imala smisla. |
 
 ##### Backward chaining — `canKillPlayerInNTurns`
 
@@ -216,9 +228,12 @@ Pošto je dovoljno da jedna grana stigne do baznog slučaja, čim Drools nađe p
 | Pravilo | Uslov | Akcija |
 |---------|-------|--------|
 | `EmitImmediateKillMove` | `?canKillPlayer(playerHp)` uspešan (direktno iz ulaznih činjenica; uzajamno isključivo sa `ConfirmNoImmediateKill`) | INSERT `EnemyDecision(letalni potez, prioritet 100)` |
-| `EmitMaximizeDamagePhysicalVulnerable` | `Tactic(MAXIMIZE_DAMAGE)` + `?isVulnerableTo("player","physical")` + `not EnemyDecision(priority >= 10)` | INSERT `EnemyDecision(best physical move, prioritet 10)` |
-| `EmitMaximizeDamageMagicVulnerable` | `Tactic(MAXIMIZE_DAMAGE)` + `?isVulnerableTo("player","magical")` + `not EnemyDecision(priority >= 10)` | INSERT `EnemyDecision(best magic move, prioritet 10)` |
-| `EmitMaximizeDamageAny` | `Tactic(MAXIMIZE_DAMAGE)` + `not EnemyDecision(priority >= 9)`, bez detektovane ranjivosti | INSERT `EnemyDecision(best damage move, prioritet 9)` |
+| `EmitMaximizeDamagePhysicalVulnerable` | `Tactic(MAXIMIZE_DAMAGE)` + `?isVulnerableToPhysical("player")` + `not EnemyDecision(priority >= 10)` | INSERT `EnemyDecision(najbolji fizički potez, prioritet 10)` |
+| `EmitMaximizeDamageAny` | `Tactic(MAXIMIZE_DAMAGE)` + `not EnemyDecision(priority >= 9)` + `MoveOption(dealsDamage == true)` | INSERT `EnemyDecision(najbolji potez koji nanosi štetu, prioritet 9)` |
+
+**Zašto se `EmitMaximizeDamageAny` poziva na `dealsDamage` umesto na kategoriju poteza?** U pre­glednom modelu, DRAIN je posebna kategorija od DAMAGE_*, ali kada `steal` efekat cilja `resource: health` (npr. `drainLife` kod veštice), on **istovremeno** smanjuje HP protivniku i leči izvođača — funkcionalno identično napadu. Pravilo koje bira „najbolji potez koji nanosi štetu" mora da računa i takve poteze, inače bi MAGIC_DRAINER arhetip (čiji su svi napadi DRAIN tipa) propao u fallback iako ima savršeno valjan damage potez. `dealsDamage` polje je izvedeno u `DroolsEnemyAIService.dealsDamage()` na osnovu strukture poteza — `true` za prave damage efekte i za `steal` po HP-u. Ne diramo `MoveCategory` jer i dalje treba da znamo da je drainLife formalno DRAIN za potrebe `ChooseDrainTactic` i `EmitDrainMove`.
+
+**Zašto nema `EmitMaximizeDamageMagicVulnerable`?** U igri ne postoji magijska otpornost — magijska šteta se ne reducira nikakvim statom protivnika, dok se fizička reducira odbranom (armorom). Zato „fizička ranjivost" (`isVulnerableToPhysical`) ima konkretno značenje (nizak `defense` ili aktivan defense-debuff), dok „magijska ranjivost" ne bi imala uporište u mehanici igre — magijski potez uvek nanosi istu štetu bez obzira na metu, pa `EmitMaximizeDamageAny` pokriva taj slučaj jednako dobro.
 | `EmitSelfBuffMove` | `Tactic(SELF_BUFF)` + `not EnemyDecision(priority >= 7)` | INSERT `EnemyDecision(self-buff potez, prioritet 7)` |
 | `EmitDebuffMove` | `Tactic(DEBUFF_PLAYER)` + `not EnemyDecision(priority >= 7)` | INSERT `EnemyDecision(debuff potez, prioritet 7)` |
 | `EmitDrainMove` | `Tactic(DRAIN)` + `not EnemyDecision(priority >= 7)` | INSERT `EnemyDecision(drain potez, prioritet 7)` |
@@ -228,8 +243,10 @@ Pošto je dovoljno da jedna grana stigne do baznog slučaja, čim Drools nađe p
 
 | Pravilo | Salience | Uslov | Akcija |
 |---------|----------|-------|--------|
-| `ChooseFallbackTactic` | 1 (L2) | `CantFinishPlayer()` + nijedna taktika nije izabrana | INSERT `Tactic(MAXIMIZE_DAMAGE)` |
-| `EmitFallbackDecision` | — | `Tactic()` postoji + nijedna odluka nije generisana | INSERT `EnemyDecision(najjeftiniji dostupni potez, prioritet 1)` |
+| `ChooseFallbackTactic` | −10 (L2) | `CantFinishPlayer()` + nijedna taktika nije izabrana | INSERT `Tactic(MAXIMIZE_DAMAGE)` |
+| `EmitFallbackDecision` | −10 (L3) | `Tactic()` postoji + nijedna odluka nije generisana | INSERT `EnemyDecision(najjeftiniji dostupni potez, prioritet 1)` |
+
+**Zašto negativni salience na fallback-u?** L1 perceptivna pravila i CEP pravila imaju podrazumevani salience 0; L2 taktička pravila imaju salience 35–80. Da je `ChooseFallbackTactic` imao pozitivan salience (recimo 1), upalio bi se **pre** L1 percepcije — pošto `CantFinishPlayer()` aktivira agendu, sva ta pravila se nadmeću, a najveći salience pobeđuje. Time bi se `Tactic(MAXIMIZE_DAMAGE)` ubacila pre nego što su `BurstDamageAssessment`, `PerceivedThreat`, `StatComparison` uopšte postojali, i `not Tactic()` guard bi blokirao sve L2 taktike koje zavise od tih percepcijskih činjenica. Negativan salience (`-10`) osigurava da fallback ide **poslednji** — samo ako stvarno nijedno drugo pravilo nije proizvelo taktiku/odluku.
 
 **Mehanizam forward chaining-a** — Java kod samo upisuje ulazne činjenice i poziva `session.fireAllRules()`. Ne postoji nikakvo eksplicitno određivanje redosleda faza. Kaskada između slojeva nastaje isključivo kroz zavisnosti podataka, sa jasnom rasviljicom na samom početku:
 
@@ -241,19 +258,34 @@ Ulazne činjenice (EnemyFact, PlayerFact, MoveOption, ...)
     │
     └── NE → ConfirmNoImmediateKill → INSERT CantFinishPlayer
                      ↓  okida sve L1 i CEP regule (čiste zavisnosti podataka)
-         L1 percepcija INSERT: PerceivedThreat, ResourceStatus, StatComparison
-         CEP pravila   INSERT: BurstDamageAssessment, PlayerBehaviorProfile
+         L1 percepcija INSERT: PerceivedThreat, ResourceStatus, StatComparison   [salience 0]
+         CEP pravila   INSERT: BurstDamageAssessment, PlayerBehaviorProfile      [salience 0]
                      ↓  nove činjenice okidaju L2 pravila
-         L2 taktika    INSERT: Tactic            ← jedini sloj sa salience
+         L2 taktika    INSERT: Tactic                                            [salience 35–80]
                      ↓  Tactic okida L3 pravila
-         L3 akcija     INSERT: EnemyDecision ← KRAJ
+         L3 akcija     INSERT: EnemyDecision (prioritet 6–10)                    [salience 0]
+                     ↓  ako ništa nije proizvelo Tactic/EnemyDecision
+         Fallback      INSERT: Tactic(MAXIMIZE_DAMAGE) / EnemyDecision(prio 1)   [salience −10]
+                                                                                    ← KRAJ
 ```
 
-Svaki sloj je aktiviran **činjenicama koje je prethodni sloj upisao**. 
+Svaki sloj je aktiviran **činjenicama koje je prethodni sloj upisao**.
+
+**Saliencee tieri** (od najvišeg ka najnižem prioritetu u agendi):
+
+| Tier | Pravila | Salience | Svrha |
+|------|---------|----------|-------|
+| Template critical | `EvaluateHealthCritical_<ARCH>` | 100 | Arhetipsko HP-critical pravilo pretiče univerzalni `EvaluateEnemyThreat*` |
+| L2 burst-reaction | `ChooseDrainOnHighBurst`, `ChooseDebuffOnHighBurst`, `ChooseSelfBuffOnHighBurst`, `ChooseConservativeOnHighBurst` | 80 / 79 / 78 / 77 | Kada `BurstDamageAssessment(HIGH)` postoji, biraju taktiku po prioritetu sa silaznim padom |
+| L2 ostale taktike | `ChooseFinishSoonTactic`, `ChooseDebuffPlayerTactic`, `ChooseConservativeTactic`, `ChooseDrainTactic`, `ChooseSelfBuffTactic` | 60 / 50 / 45 / 40 / 35 | Selekcija taktike na osnovu percepcijskih činjenica |
+| Template aggressive | `ChooseAggressiveTactic_<ARCH>` | 50 | Arhetip uvodi MAXIMIZE_DAMAGE kada je na komfornom HP-u |
+| L1 percepcija, CEP, L3 | sva pravila bez eksplicitnog `salience` | 0 (default) | Default tier — pravila se ne nadmeću jer pišu različite činjenice |
+| Fallback | `ChooseFallbackTactic`, `EmitFallbackDecision` | −10 | Idu poslednji — samo ako stvarno nijedan drugi mehanizam nije proizveo izlaz |
+
 - `EmitImmediateKillMove` i `ConfirmNoImmediateKill` su **uzajamno isključivi** čistim zavisnostima podataka; kada ubistvo postoji, uslov `not MoveOption(projectedValue >= playerHp)` u `ConfirmNoImmediateKill` nikad nije ispunjen; kada ne postoji, query `?canKillPlayer` u `EmitImmediateKillMove` ne nalazi dokaz
-- L1 i CEP pravila nemaju salience — svako upisuje drugačiju činjenicu i ne takmiče se međusobno; redosled njihovog paljenja ne utiče na ishod
+- L1 i CEP pravila pišu **različite činjenice** i ne takmiče se međusobno; redosled njihovog paljenja ne utiče na ishod
 - L2 burst pravila (salience 77–80) koriste salience za prioritet: `ChooseDrainOnHighBurst` je poželjniji od `ChooseSelfBuffOnHighBurst`; `not Tactic()` guard deaktivira ostala L2 pravila čim jedno uspe
-- L3 pravila nemaju salience — priority polje u samom `EnemyDecision` faktu vrši selekciju; `not EnemyDecision(priority >= N)` guard sprečava prepisivanje odluke višeg prioriteta; `bestDecision()` na kraju bira onu sa najvišim prioritetom
+- L3 pravila — selekcija je preko `priority` polja u `EnemyDecision` faktu; `not EnemyDecision(priority >= N)` guard sprečava prepisivanje odluke višeg prioriteta; `bestDecision()` na kraju bira onu sa najvišim prioritetom
 
 #### Template-i i arhetipovi
 
@@ -389,8 +421,8 @@ Upisom `CantFinishPlayer()` u koraku 1, sva L1 pravila postaju aktivna.
 
 CEP pravila takođe zahtevaju `CantFinishPlayer()` i procesiraju tok borbenih događaja korišćenjem klizajućih prozora.
 
-**`AssessBurstDamageRisk`** (accumulate sum, window: poslednje 3 štete):
-> sum DAMAGE_DEALT od igrača: 12 + 14 + 11 = **37**
+**`AssessBurstDamageRisk`** (accumulate sum, window: poslednjih ~3 poteza igrača — `window:time(6ms)`):
+> sum DAMAGE_DEALT od igrača u vremenskom prozoru: 12 + 14 + 11 = **37**
 > 37 > 70 × 0.35 = 24.5 ✓
 > → **INSERT** `BurstDamageAssessment(37, HIGH)`
 
