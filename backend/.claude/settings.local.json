@@ -15,7 +15,9 @@
       "Read(//f/NordeusChallenge/**)",
       "WebSearch",
       "Bash(dir F:NordeusChallenge *)",
-      "Bash(./gradlew compileJava --console=plain)"
+      "Bash(./gradlew compileJava --console=plain)",
+      "Bash(ls \"../\")",
+      "Read(//c/NordeusChallenge/**)"
     ]
   }
 }

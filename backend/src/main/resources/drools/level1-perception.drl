@@ -15,6 +15,7 @@ import com.example.backend.services.ai.ThreatLevel;
 // Mutually exclusive with EmitImmediateKillMove — exactly one path fires per turn.
 // CantFinishPlayer is the trigger for all perception and tactic rules.
 rule "ConfirmNoImmediateKill"
+    salience 200
 when
     $p : PlayerFact($hp : currentHp)
     not MoveOption(projectedValue >= $hp)
@@ -26,6 +27,7 @@ end
 // Universal L1 — Enemy health state (PerceivedThreat = how endangered the enemy is).
 // Exactly one of these three fires per turn, covering the full HP range.
 rule "EvaluateEnemyThreatCritical"
+    salience 200
 when
     CantFinishPlayer()
     EnemyFact(hpPercent < 0.25)
@@ -35,6 +37,7 @@ then
 end
 
 rule "EvaluateEnemyThreatHigh"
+    salience 200
 when
     CantFinishPlayer()
     EnemyFact(hpPercent >= 0.25, hpPercent < 0.50)
@@ -44,6 +47,7 @@ then
 end
 
 rule "EvaluateEnemyThreatLow"
+    salience 200
 when
     CantFinishPlayer()
     EnemyFact(hpPercent >= 0.50)
@@ -54,6 +58,7 @@ end
 
 // Universal L1 — Resource assessment
 rule "EvaluateResourceStaminaStarved"
+    salience 200
 when
     CantFinishPlayer()
     EnemyFact($maxStam : maxStamina, maxStamina > 0,
@@ -64,6 +69,7 @@ then
 end
 
 rule "EvaluateResourceManaStarved"
+    salience 200
 when
     CantFinishPlayer()
     EnemyFact($maxMana : maxMana, maxMana > 0,
@@ -75,6 +81,7 @@ end
 
 // Universal L1 — Stat comparison
 rule "DetectStatDisadvantage"
+    salience 200
 when
     CantFinishPlayer()
     $p : PlayerFact($pa : attack)
@@ -86,6 +93,7 @@ then
 end
 
 rule "DetectMagicThreat"
+    salience 200
 when
     CantFinishPlayer()
     PlayerFact(magic >= 8)

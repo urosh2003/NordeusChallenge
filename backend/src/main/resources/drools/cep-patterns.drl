@@ -11,6 +11,7 @@ end
 
 // CEP: player used physical damage moves 3+ times in last 4 MOVE_USED events
 rule "DetectPlayerPhysicalSpammer"
+    salience 150
 when
     CantFinishPlayer()
     not PlayerBehaviorProfile(type == BehaviorType.PHYSICAL_SPAMMER)
@@ -28,6 +29,7 @@ end
 
 // CEP: player debuffed, then dealt damage within the next 2 turns.
 rule "DetectPlayerComboSetup"
+    salience 150
 when
     CantFinishPlayer()
     not PlayerBehaviorProfile(type == BehaviorType.COMBO_PLAYER)

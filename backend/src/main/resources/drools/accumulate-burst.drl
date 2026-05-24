@@ -11,6 +11,7 @@ import com.example.backend.services.ai.Severity;
 // player/enemy alternate, so 6 turn-units covers roughly the last 3 player turns
 // regardless of whether each turn dealt damage.
 rule "AssessBurstDamageRisk"
+    salience 150
 when
     CantFinishPlayer()
     $enemy : EnemyFact($maxHp : maxHp)

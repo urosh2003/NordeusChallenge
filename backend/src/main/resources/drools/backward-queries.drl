@@ -40,15 +40,19 @@ query "canKillPlayerInNTurns"(int playerHp, int enemyMana, int enemyStamina, int
     eval(playerHp <= 0)
   or
     // Recursive: a damaging affordable move exists, and after applying it
-    // (with regen for the next turn) the goal is reachable in N-1 turns
+    // (with regen for the next turn) the goal is reachable in N-1 turns.
+    // Intermediate values are pre-bound through `from Integer.valueOf(...)` so the
+    // recursive ?canKillPlayerInNTurns call receives plain declaration refs only —
+    // mixing query params with locally-bound vars inside arithmetic/function-call
+    // arg expressions tripped a Drools QueryArgument indexing bug (AIOOBE).
     eval(turnsLeft > 0 && playerHp > 0)
     $e : EnemyFact($mag : magic, $att : attack, $maxM : maxMana, $maxS : maxStamina)
     $m : MoveOption($dmg : projectedValue, $cost : costValue, $costType : costType,
                     projectedValue > 0)
     eval(canAfford($costType, $cost, enemyMana, enemyStamina))
-    ?canKillPlayerInNTurns(
-        playerHp - $dmg,
-        regenClamp(enemyMana    - manaCost($costType, $cost)    + $mag, $maxM),
-        regenClamp(enemyStamina - staminaCost($costType, $cost) + $att, $maxS),
-        turnsLeft - 1; )
+    Integer($newHp : intValue)    from Integer.valueOf(playerHp - $dmg)
+    Integer($newMana : intValue)  from Integer.valueOf(regenClamp(enemyMana    - manaCost($costType, $cost)    + $mag, $maxM))
+    Integer($newStam : intValue)  from Integer.valueOf(regenClamp(enemyStamina - staminaCost($costType, $cost) + $att, $maxS))
+    Integer($newTurns : intValue) from Integer.valueOf(turnsLeft - 1)
+    ?canKillPlayerInNTurns($newHp, $newMana, $newStam, $newTurns; )
 end

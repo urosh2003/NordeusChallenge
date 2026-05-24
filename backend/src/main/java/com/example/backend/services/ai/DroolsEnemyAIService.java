@@ -267,15 +267,12 @@ public class DroolsEnemyAIService {
             return decisions.stream()
                     .max(Comparator.comparingInt(EnemyDecision::getPriority))
                     .map(EnemyDecision::getMoveId)
-                    .orElse(null);
+                    .orElse("pass");
         }
-        // Hard fallback: first usable move
-        return enemy.getMoves().stream()
-                .filter(id -> {
-                    MoveDefinition def = safeGetDefinition(id);
-                    return def != null && canAfford(def, enemy);
-                })
-                .findFirst()
-                .orElse(enemy.getMoves().get(0));
+        // No EnemyDecision means no MoveOption was inserted (every L3 emit rule and
+        // the salience -10 fallback require at least one MoveOption to bind), which
+        // in turn means no move was affordable. Signal a pass; the caller's
+        // executeMove → InvalidMoveException path converts this into a pass event.
+        return "pass";
     }
 }

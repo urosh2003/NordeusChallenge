@@ -153,11 +153,15 @@ query "canKillPlayerInNTurns"(int playerHp, int enemyMana, int enemyStamina, int
     $m : MoveOption($dmg : projectedValue, $cost : costValue, $costType : costType,
                     projectedValue > 0)
     eval(canAfford($costType, $cost, enemyMana, enemyStamina))
-    ?canKillPlayerInNTurns(
-        playerHp - $dmg,
-        regenClamp(enemyMana    - manaCost($costType, $cost)    + $mag, $maxM),
-        regenClamp(enemyStamina - staminaCost($costType, $cost) + $att, $maxS),
-        turnsLeft - 1; )
+    // Pre-vezivanje međurezultata kroz `from Integer.valueOf(...)` da rekurzivni
+    // poziv prima isključivo proste declaration reference — videti odeljak
+    // "Otklanjanje grešaka kroz analizu logova" za detalje (zaobilazi
+    // QueryArgument indexing bug u Drools-u kada mešani izrazi idu kao argumenti).
+    Integer($newHp : intValue)    from Integer.valueOf(playerHp - $dmg)
+    Integer($newMana : intValue)  from Integer.valueOf(regenClamp(enemyMana    - manaCost($costType, $cost)    + $mag, $maxM))
+    Integer($newStam : intValue)  from Integer.valueOf(regenClamp(enemyStamina - staminaCost($costType, $cost) + $att, $maxS))
+    Integer($newTurns : intValue) from Integer.valueOf(turnsLeft - 1)
+    ?canKillPlayerInNTurns($newHp, $newMana, $newStam, $newTurns; )
 end
 ```
 
@@ -258,8 +262,8 @@ Ulazne činjenice (EnemyFact, PlayerFact, MoveOption, ...)
     │
     └── NE → ConfirmNoImmediateKill → INSERT CantFinishPlayer
                      ↓  okida sve L1 i CEP regule (čiste zavisnosti podataka)
-         L1 percepcija INSERT: PerceivedThreat, ResourceStatus, StatComparison   [salience 0]
-         CEP pravila   INSERT: BurstDamageAssessment, PlayerBehaviorProfile      [salience 0]
+         L1 percepcija INSERT: PerceivedThreat, ResourceStatus, StatComparison   [salience 200]
+         CEP pravila   INSERT: BurstDamageAssessment, PlayerBehaviorProfile      [salience 150]
                      ↓  nove činjenice okidaju L2 pravila
          L2 taktika    INSERT: Tactic                                            [salience 35–80]
                      ↓  Tactic okida L3 pravila
@@ -279,7 +283,9 @@ Svaki sloj je aktiviran **činjenicama koje je prethodni sloj upisao**.
 | L2 burst-reaction | `ChooseDrainOnHighBurst`, `ChooseDebuffOnHighBurst`, `ChooseSelfBuffOnHighBurst`, `ChooseConservativeOnHighBurst` | 80 / 79 / 78 / 77 | Kada `BurstDamageAssessment(HIGH)` postoji, biraju taktiku po prioritetu sa silaznim padom |
 | L2 ostale taktike | `ChooseFinishSoonTactic`, `ChooseDebuffPlayerTactic`, `ChooseConservativeTactic`, `ChooseDrainTactic`, `ChooseSelfBuffTactic` | 60 / 50 / 45 / 40 / 35 | Selekcija taktike na osnovu percepcijskih činjenica |
 | Template aggressive | `ChooseAggressiveTactic_<ARCH>` | 50 | Arhetip uvodi MAXIMIZE_DAMAGE kada je na komfornom HP-u |
-| L1 percepcija, CEP, L3 | sva pravila bez eksplicitnog `salience` | 0 (default) | Default tier — pravila se ne nadmeću jer pišu različite činjenice |
+| L1 percepcija | sva pravila iz `level1-perception.drl` | 200 | Sva percepcija mora da završi pre L2 selekcije taktike — videti odeljak "Otklanjanje grešaka kroz analizu logova" |
+| CEP | sva pravila iz `cep-patterns.drl` i `accumulate-burst.drl` | 150 | Akumulativne i temporalne činjenice (burst, behavior profili) pre L2 selekcije |
+| L3 akcija | sva pravila iz `level3-action.drl` | 0 (default) | Ne nadmeću se međusobno — `priority` polje u `EnemyDecision` + `not EnemyDecision(priority >= N)` guard |
 | Fallback | `ChooseFallbackTactic`, `EmitFallbackDecision` | −10 | Idu poslednji — samo ako stvarno nijedan drugi mehanizam nije proizveo izlaz |
 
 - `EmitImmediateKillMove` i `ConfirmNoImmediateKill` su **uzajamno isključivi** čistim zavisnostima podataka; kada ubistvo postoji, uslov `not MoveOption(projectedValue >= playerHp)` u `ConfirmNoImmediateKill` nikad nije ispunjen; kada ne postoji, query `?canKillPlayer` u `EmitImmediateKillMove` ne nalazi dokaz
@@ -478,3 +484,117 @@ Odluka je nastala kroz čisti forward chaining — svaki korak je bio automatski
 Primećujemo da `ChooseConservativeTactic` (salience 45) **nije** palilo, iako je `ResourceStatus(STARVED)` bio prisutan — burst pravilo (salience 78) je ubacilo `Tactic` pre nego što je konzervativno pravilo imalo prilike. `not Tactic()` guard je potom automatski deaktivirao sva preostala L2 pravila.
 
 Ceo proces, od sirovih statistika do konkretnog poteza, odvija se transparentno kroz čitljiva pravila, sa jasnim tragom zaključivanja koji je moguće ispitati i promeniti u svakom koraku.
+
+---
+
+## Otklanjanje grešaka kroz analizu logova
+
+Tokom integracionog testiranja sistema kroz nekoliko realnih borbi, `RuleFiringLogger` (zakačen na svaki `KieSession`) beleži svaki `INSERT` i `FIRED` događaj sa milisekundnom vremenskom oznakom. Pažljivo čitanje tih logova otkrilo je dva strukturna problema u prvobitnoj implementaciji i jedan rubni slučaj u Java fallback-u. Sam proces dijagnostike — poređenje stvarnog redosleda paljenja sa onim koji arhitektura nalaže, identifikovanje mesta gde se sistem ponaša drugačije — odlična je ilustracija transparentnosti rule-based pristupa: svaka odluka je trag pravila i činjenica koji se čita unazad, bez black-box komponente ili neprozirne heuristike.
+
+### Bug 1 — `ArrayIndexOutOfBoundsException` u rekurzivnom backward chaining-u
+
+**Simptom** (log za giantSpider, `PerceivedThreat(LOW)`, `ChooseFinishSoonTactic` pokušava da se aktivira):
+
+```
+17:48:48.184  FIRED  EvaluateEnemyThreatLow            ← PerceivedThreat(LOW) ubačen
+17:48:48.205  ERROR  ArrayIndexOutOfBoundsException: Index 6 out of bounds for length 4
+                  at org.drools.base.rule.QueryArgument.evaluateDeclaration(QueryArgument.java:38)
+                  at org.drools.core.reteoo.QueryElementNode.createDroolsQuery(QueryElementNode.java:151)
+```
+
+Crash se javljao samo na LOW-threat putanji jer je to jedina putanja koja okida `?canKillPlayerInNTurns(...)`. Sesije sa HIGH ili CRITICAL pretnjom su prolazile bez problema (nikad nisu pokretale ovaj query).
+
+**Uzrok**: prvobitni rekurzivni poziv u `canKillPlayerInNTurns` mešao je parametre queryja (`playerHp`, `enemyMana`, `enemyStamina`, `turnsLeft`) sa lokalno vezanim deklaracijama (`$dmg`, `$cost`, `$costType`, `$mag`, `$att`, `$maxM`, `$maxS`) **unutar aritmetičkih i function-call izraza**:
+
+```drl
+?canKillPlayerInNTurns(
+    playerHp - $dmg,
+    regenClamp(enemyMana    - manaCost($costType, $cost)    + $mag, $maxM),
+    regenClamp(enemyStamina - staminaCost($costType, $cost) + $att, $maxS),
+    turnsLeft - 1; )
+```
+
+Drools `QueryArgument` kompajlira svako mesto argumenta kao literal-ili-declaration referencu, i pri kombinaciji više deklaracija iz različitih izvora unutar složenih izraza, internal indexing tuple-a izlazi iz opsega queryja (4 parametra) — index 6 odgovara sedmoj lokalnoj deklaraciji (`MoveOption` veze) koja u tuple-u nije bila.
+
+**Rešenje**: pre-vezivanje međurezultata kroz `Integer.valueOf(...) from`, tako da rekurzivni poziv prima isključivo proste declaration reference (vidi izmenjeni query u odeljku `backward-queries.drl` iznad):
+
+```drl
+Integer($newHp : intValue)    from Integer.valueOf(playerHp - $dmg)
+Integer($newMana : intValue)  from Integer.valueOf(regenClamp(enemyMana    - manaCost($costType, $cost)    + $mag, $maxM))
+Integer($newStam : intValue)  from Integer.valueOf(regenClamp(enemyStamina - staminaCost($costType, $cost) + $att, $maxS))
+Integer($newTurns : intValue) from Integer.valueOf(turnsLeft - 1)
+?canKillPlayerInNTurns($newHp, $newMana, $newStam, $newTurns; )
+```
+
+Crash je eliminisan; query se sada konzistentno evaluira bez izuzetka, a logika rekurzije (depth-first sa unifikacijom — vidi šemu iznad) ostala je netaknuta.
+
+### Bug 2 — Redosled paljenja: L2 taktike preteknu L1 percepciju
+
+**Simptom** (log za goblinMage, igrač upravo naneo 23 štete = 57.5% maxHp neprijatelja):
+
+```
+06.320  FIRED  ConfirmNoImmediateKill           ← ubaci CantFinishPlayer
+06.326  FIRED  EvaluateEnemyThreatHigh          ← ubaci PerceivedThreat(HIGH)
+06.355  FIRED  ChooseSelfBuffTactic             ← L2 odmah pali — Tactic = SELF_BUFF
+06.367  FIRED  EmitSelfBuffMove                 ← L3 emituje arcaneSurge, odluka zaključana
+06.393  FIRED  DetectMagicThreat                ← L1 percepcija prekasno (StatComparison neiskorišćen)
+06.422  FIRED  AssessBurstDamageRisk            ← BurstDamageAssessment(HIGH) prekasno
+```
+
+Player ima `magic=13` (≥ 8, trebalo da okine `PLAYER_MAGIC_DOMINATES`) i upravo je izvršio burst preko 35% praga (trebalo da okine `BurstDamageAssessment(HIGH)`). Obe činjenice je trebalo da oblikuju izbor taktike kroz burst-reactive pravila (salience 77–80), ali nijedna nije stigla na vreme — `Tactic(SELF_BUFF)` je već bio upisan kroz nisko-saliencnu `ChooseSelfBuffTactic` (35), i `not Tactic()` guard u svim L2/L3 pravilima je blokirao kasnije evaluacije.
+
+**Uzrok**: L1 perceptivna i CEP pravila imala su **podrazumevani salience 0**, dok L2 taktička pravila imaju salience 35–80. Drools agenda fire-uje po salience-u — čim jedno L1 pravilo upisuje `PerceivedThreat`, L2 pravilo koje ga odgovara (sa salience-om ≥ 35) preteže ostala L1/CEP pravila (salience 0). Faza L1 → L2 → L3, koju je arhitektura nalagala kao striktnu kaskadu, u praksi se preplitala.
+
+**Rešenje**: eksplicitan salience za perceptivni i CEP sloj, znatno iznad bilo koje taktike:
+
+| Sloj | Stari salience | Novi salience | Zašto |
+|------|---------------|---------------|-------|
+| L1 percepcija | 0 (default) | **200** | Sva percepcija mora da završi pre L2 |
+| CEP (burst + behavior) | 0 (default) | **150** | Akumulativne/temporalne činjenice pre L2 |
+| L2 burst-reactive | 77–80 | (nepromenjen) | Sada uspešno pretežu standardne taktike |
+| L2 standardne | 35–60 | (nepromenjeno) | |
+| L3 + fallback | 0 / −10 | (nepromenjeno) | Ne nadmeću se po salience-u, već po `priority` polju |
+
+Nakon promene, nova logovska sekvenca tačno odražava arhitektonsku nameru. Za istu situaciju (goblinWarrior u kasnijem testu) sada vidimo:
+
+```
+ConfirmNoImmediateKill → CantFinishPlayer
+EvaluateEnemyThreatLow → PerceivedThreat(LOW)
+DetectStatDisadvantage → StatComparison(PLAYER_PHYSICAL_DOMINATES)
+AssessBurstDamageRisk → BurstDamageAssessment(HIGH, total=26)
+ChooseSelfBuffOnHighBurst (sal 78) → Tactic(SELF_BUFF)   ← burst-reactive sada pobeđuje
+EmitSelfBuffMove → EnemyDecision(frenzy)
+```
+
+Svih 5 perceptivnih/CEP pravila završi pre nego što ijedno L2 dobije priliku. Burst-reactive pravila (77–80) sada uspešno pretežu standardne taktike (35–60) kada `BurstDamageAssessment(HIGH)` postoji.
+
+### Pass kao izlaz: neprijatelj koji nema nijedan dostupan potez
+
+Treća situacija primećena u logovima: kada centaur u kasnoj fazi borbe ima stamina=3, a sva njegova fizička napada koštaju ≥10, `insertFacts` u `DroolsEnemyAIService` (filtrira move-ove kroz `canAfford`) odbacuje sve poteze i **nijedna `MoveOption` činjenica se ne ubacuje** u radnu memoriju. Pipeline ipak ide do kraja jer L1 i CEP pravila ne zavise od `MoveOption`:
+
+```
+ConfirmNoImmediateKill → CantFinishPlayer
+EvaluateEnemyThreat* → PerceivedThreat
+AssessBurstDamageRisk → BurstDamageAssessment(HIGH)
+ChooseConservativeOnHighBurst → Tactic(CONSERVATIVE)
+── pickMove end: selected=maulSwing   ← Java fallback bira NEDOSTUPAN potez!
+```
+
+Sva L3 emit pravila (uključujući salience −10 `EmitFallbackDecision`) zahtevaju **bar jednu `MoveOption`** za pattern match. Nijedna ne pali. Pre ispravke, Java fallback u `DroolsEnemyAIService.bestDecision()` vraćao je prvi potez iz `enemy.getMoves()` bez obzira na dostupnost — što je rezultiralo time da se sistem trudio da izvrši potez koji ne može.
+
+**Rešenje**: `bestDecision()` sada vraća literal `"pass"` kada se nije generisao nijedan `EnemyDecision`. Uslov `decisions.isEmpty()` je tačno onda kada nije ubačena nijedna `MoveOption` (jer i ultimate fallback `EmitFallbackDecision` zahteva pattern match), što direktno znači da neprijatelj nema dostupan potez. Postojeći `try { combatService.executeMove(...) } catch (InvalidMoveException)` blok u `CombatSessionService.processEnemyTurn` već konvertuje takav slučaj u clean `MOVE_USED` događaj sa `moveId: "pass"` — neprijatelj korektno preskoči potez, regen se primeni, i igrač nastavlja normalno.
+
+```java
+if (!decisions.isEmpty()) {
+    return decisions.stream()
+            .max(Comparator.comparingInt(EnemyDecision::getPriority))
+            .map(EnemyDecision::getMoveId)
+            .orElse("pass");
+}
+// Nema EnemyDecision ⟺ nema afordable MoveOption ⟺ pass
+return "pass";
+```
+
+### Šta ovo govori o pristupu
+
+Sva tri problema su otkrivena čitanjem logova i analizom redosleda paljenja pravila — nijedna od izmena nije zahtevala izmenu test-suite-a ili re-trening modela. Sam dijagnostički proces (čitam log, vidim da `DetectMagicThreat` pali **posle** `EmitSelfBuffMove` umesto pre, izračunam očekivani vs. stvarni salience tier — zaključak za 2 minuta) ilustruje **prednost koju ovaj proposal navodi u uvodu**: eksplicitna pravila čitljiva kao poslovne politike, transparentnost rezonovanja, mogućnost iterativnog menjanja parametara bez velikih refaktora. Ispravka redosleda paljenja je bila dodavanje jednog reda u svako pravilo (`salience 200` / `150`); ispravka backward chaining bug-a bila je lokalna izmena unutar jednog queryja bez dodirivanja ostatka sistema; pass fallback je 3-linijska izmena u Javi. Da je sistem bio black-box (npr. trenirana neuronska mreža), nijedan od ovih problema ne bi bio dijagnostikovan posmatranjem tragova, a popravka bi zahtevala ponovni trening ili duboku refaktorizaciju.
